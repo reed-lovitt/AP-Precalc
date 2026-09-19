@@ -14,7 +14,8 @@ h1{margin:0 0 8px;font-size:30px}
 .score{font-size:17px}
 .problem-box{border:1.5px solid #111;padding:22px}
 .question{font-size:21px;font-weight:700;line-height:1.45;margin-bottom:18px}
-.math{font-family:Arial,Helvetica,sans-serif;font-size:24px;font-style:normal}
+.math{font-family:"Times New Roman",Times,serif;font-size:24px;font-style:normal}
+.var{font-style:italic}
 .choices{display:grid;grid-template-columns:1fr;gap:10px}
 .choice{border:1.5px solid #111;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff}
 .choice:hover{background:#f2f2f2}
@@ -78,11 +79,11 @@ function shuffle(arr){
   return a;
 }
 function realFactor(r,m){
-  var core = r>=0 ? "(x - "+r+")" : "(x + "+Math.abs(r)+")";
+  var core = r>=0 ? "(<span class='var'>x</span> - "+r+")" : "(<span class='var'>x</span> + "+Math.abs(r)+")";
   return m>1 ? core+"<sup>"+m+"</sup>" : core;
 }
 function complexZero(a,b){
-  return a+(b<0?" - ":" + ")+Math.abs(b)+"i";
+  return a+(b<0?" - ":" + ")+Math.abs(b)+"<span class='var'>i</span>";
 }
 function uniqueReal(exclude){
   var r;
@@ -106,24 +107,24 @@ function makeProblem(){
   var realCount=mult+1+(r3===null?0:1);
   var correctDegree=realCount+2; // one stated nonreal zero + required conjugate
 
-  var prompt="A polynomial <span class='math'>p</span> has real coefficients. ";
+  var prompt="A polynomial <span class='math'><span class='var'>p</span></span> has real coefficients. ";
   if(mode==="factors"){
     prompt+="The polynomial has factors <span class='math'>"+realFactor(r1,mult)+"</span>";
     prompt+=", <span class='math'>"+realFactor(r2,1)+"</span>";
     if(r3!==null) prompt+=", and <span class='math'>"+realFactor(r3,1)+"</span>";
-    prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero of <span class='math'>p</span>.";
+    prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero of <span class='math'><span class='var'>p</span></span>.";
   }else if(mode==="zeros"){
     prompt+="The number <span class='math'>"+r1+"</span> is a zero of multiplicity "+mult+", ";
     prompt+="<span class='math'>"+r2+"</span> is a zero";
     if(r3!==null) prompt+=", <span class='math'>"+r3+"</span> is a zero";
     prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero.";
   }else{
-    prompt+="The factor <span class='math'>"+realFactor(r1,mult)+"</span> occurs in the factorization of <span class='math'>p</span>, ";
+    prompt+="The factor <span class='math'>"+realFactor(r1,mult)+"</span> occurs in the factorization of <span class='math'><span class='var'>p</span></span>, ";
     prompt+="<span class='math'>"+r2+"</span> is a zero";
     if(r3!==null) prompt+=", <span class='math'>"+realFactor(r3,1)+"</span> is also a factor";
     prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero.";
   }
-  prompt+=" What is the minimum possible degree of <span class='math'>p</span>?";
+  prompt+=" What is the minimum possible degree of <span class='math'><span class='var'>p</span></span>?";
 
   var distractorSet=[];
   function add(v){
