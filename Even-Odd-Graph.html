@@ -79,6 +79,16 @@ var correctCount=0;
 var attemptCount=0;
 var currentProblem=null;
 
+// Exactly 20% hole questions: one per shuffled block of five.
+var holeQuestionCycle=[];
+
+function nextHoleQuestion(){
+  if(holeQuestionCycle.length===0){
+    holeQuestionCycle=shuffle([true,false,false,false,false]);
+  }
+  return holeQuestionCycle.pop();
+}
+
 var GL=85, GR=745, GT=25, GB=365;
 var XMIN=-6, XMAX=6, YMIN=-6, YMAX=6;
 
@@ -195,7 +205,7 @@ function makeChoices(answer,givenY,dotY){
 
 function makeProblem(){
   var type=Math.random()<0.5 ? "even" : "odd";
-  var asksAboutDisjointDot=Math.random()<0.20;
+  var asksAboutDisjointDot=nextHoleQuestion();
 
   // Exactly one visible positive-side interval:
   //   [0,3)   OR   (3,6]
