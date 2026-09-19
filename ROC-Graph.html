@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate of Change from a Graph</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; color:#111; font-family:Arial,Helvetica,sans-serif; }
+  .page { max-width:900px; margin:28px auto; padding:0 18px; }
+  h1 { margin:0 0 8px; font-size:30px; }
+  .subtitle { font-size:17px; color:#444; margin-bottom:18px; }
+  .topbar { display:flex; justify-content:flex-end; margin-bottom:18px; }
+  .score { font-size:17px; }
+  .problem-box { border:1.5px solid #111; padding:22px; }
+  .question { font-size:20px; font-weight:700; margin-bottom:10px; }
+
+  #graph {
+    width:100%;
+    height:380px;
+    display:block;
+    margin:8px 0 18px;
+  }
+
+  .choices { display:grid; grid-template-columns:1fr; gap:10px; }
+  .choice {
+    border:1.5px solid #111;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    background:#fff;
+  }
+  .choice:hover { background:#f2f2f2; }
+  .choice input { transform:scale(1.15); margin:0; }
+  .choice-letter { font-weight:700; min-width:24px; }
+  .choice-math {
+    font-family:"Times New Roman",Times,serif;
+    font-size:24px;
+    display:inline-flex;
+    align-items:center;
+  }
+  .frac {
+    display:inline-flex;
+    flex-direction:column;
+    align-items:stretch;
+    vertical-align:middle;
+    text-align:center;
+    line-height:1.05;
+    min-width:120px;
+  }
+  .frac .num {
+    border-bottom:1.7px solid #111;
+    padding:0 7px 4px;
+  }
+  .frac .den { padding:4px 7px 0; }
+
+  .button-row { margin-top:18px; }
+  button {
+    font-size:17px;
+    padding:11px 18px;
+    border:1.5px solid #111;
+    background:#fff;
+    cursor:pointer;
+  }
+  button:hover { background:#ededed; }
+
+  #feedback {
+    min-height:30px;
+    margin-top:16px;
+    font-size:19px;
+    font-weight:700;
+  }
+  .correct { color:#16752b; }
+  .incorrect { color:#b52222; }
+
+  @media(max-width:650px){
+    .page{padding:0 12px;margin-top:18px}
+    .problem-box{padding:16px}
+    h1{font-size:27px}
+    #graph{height:310px}
+    .choice-math{font-size:21px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Rate of Change from a Graph</h1>
+  <div class="subtitle">Choose the correct setup from the graph. Do not simplify.</div>
+
+  <div class="topbar">
+    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+  </div>
+
+  <div class="problem-box">
+    <div class="question" id="promptText"></div>
+
+    <svg id="graph" viewBox="0 0 800 380" aria-label="coordinate graph"></svg>
+
+    <form class="choices">
+      <label class="choice">
+        <input type="radio" name="choice" value="0">
+        <span class="choice-letter">A.</span>
+        <span class="choice-math" id="choice0"></span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="choice" value="1">
+        <span class="choice-letter">B.</span>
+        <span class="choice-math" id="choice1"></span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="choice" value="2">
+        <span class="choice-letter">C.</span>
+        <span class="choice-math" id="choice2"></span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="choice" value="3">
+        <span class="choice-letter">D.</span>
+        <span class="choice-math" id="choice3"></span>
+      </label>
+    </form>
+
+    <div class="button-row">
+      <button id="actionButton" type="button">Check Answer</button>
+    </div>
+
+    <div id="feedback"></div>
+  </div>
+</div>
+
+<script>
+let currentProblem = null;
+let answered = false;
+let correctCount = 0;
+let attemptCount = 0;
+
+const svg = document.getElementById("graph");
+
+const W = 800;
+const H = 380;
+const left = 70;
+const right = 760;
+const top = 25;
+const bottom = 330;
+const xMin = -6;
+const xMax = 6;
+const yMin = -6;
+const yMax = 6;
+
+function randInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function shuffle(arr){
+  const copy=[...arr];
+  for(let i=copy.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
+  }
+  return copy;
+}
+
+function el(type, attrs={}){
+  const e=document.createElementNS("http://www.w3.org/2000/svg", type);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function xPx(x){
+  return left + (x-xMin)*(right-left)/(xMax-xMin);
+}
+
+function yPx(y){
+  return bottom - (y-yMin)*(bottom-top)/(yMax-yMin);
+}
+
+function subtractText(first, second){
+  return second < 0 ? `${first}- (${second})` : `${first}- ${second}`;
+}
+
+function fractionHTML(n1,n2,d1,d2){
+  return `
+    <span class="frac">
+      <span class="num">${subtractText(n1,n2)}</span>
+      <span class="den">${subtractText(d1,d2)}</span>
+    </span>
+  `;
+}
+
+function generateProblem(){
+  const xs=[-5,-3,-1,1,3,5];
+  const ys=[];
+
+  while(ys.length<xs.length){
+    let y=randInt(-5,5);
+    if(!ys.includes(y)) ys.push(y);
+  }
+
+  let i1,i2;
+  do{
+    i1=randInt(0,xs.length-1);
+    i2=randInt(0,xs.length-1);
+  } while(i1===i2 || Math.abs(i1-i2)<2);
+
+  const leftIndex=Math.min(i1,i2);
+  const rightIndex=Math.max(i1,i2);
+
+  const a=xs[leftIndex];
+  const b=xs[rightIndex];
+  const fA=ys[leftIndex];
+  const fB=ys[rightIndex];
+
+  const choices=[
+    {n1:fA,n2:fB,d1:a,d2:b,correct:true},
+    {n1:a,n2:b,d1:fA,d2:fB,correct:false},
+    {n1:fA,n2:fB,d1:b,d2:a,correct:false},
+    {n1:a,n2:fA,d1:b,d2:fB,correct:false}
+  ];
+
+  return {xs,ys,a,b,fA,fB,leftIndex,rightIndex,choices:shuffle(choices)};
+}
+
+function drawGraph(p){
+  svg.innerHTML="";
+
+  // grid
+  for(let x=xMin;x<=xMax;x++){
+    const px=xPx(x);
+    svg.appendChild(el("line",{
+      x1:px,y1:top,x2:px,y2:bottom,
+      stroke:x===0?"#111":"#ddd",
+      "stroke-width":x===0?2:1
+    }));
+  }
+  for(let y=yMin;y<=yMax;y++){
+    const py=yPx(y);
+    svg.appendChild(el("line",{
+      x1:left,y1:py,x2:right,y2:py,
+      stroke:y===0?"#111":"#ddd",
+      "stroke-width":y===0?2:1
+    }));
+  }
+
+  // axis labels
+  for(let x=xMin;x<=xMax;x++){
+    if(x===0) continue;
+    const t=el("text",{
+      x:xPx(x),y:yPx(0)+22,
+      "text-anchor":"middle",
+      "font-size":14,
+      "font-family":"Arial"
+    });
+    t.textContent=x;
+    svg.appendChild(t);
+  }
+  for(let y=yMin;y<=yMax;y++){
+    if(y===0) continue;
+    const t=el("text",{
+      x:xPx(0)-12,y:yPx(y)+5,
+      "text-anchor":"end",
+      "font-size":14,
+      "font-family":"Arial"
+    });
+    t.textContent=y;
+    svg.appendChild(t);
+  }
+
+  // polyline through integer-coordinate points
+  const pts=p.xs.map((x,i)=>`${xPx(x)},${yPx(p.ys[i])}`).join(" ");
+  svg.appendChild(el("polyline",{
+    points:pts,
+    fill:"none",
+    stroke:"#111",
+    "stroke-width":4,
+    "stroke-linejoin":"round",
+    "stroke-linecap":"round"
+  }));
+
+  // all graph points
+  p.xs.forEach((x,i)=>{
+    svg.appendChild(el("circle",{
+      cx:xPx(x),cy:yPx(p.ys[i]),r:5,
+      fill:"#111"
+    }));
+  });
+
+  // selected endpoints emphasized
+  [p.leftIndex,p.rightIndex].forEach(i=>{
+    svg.appendChild(el("circle",{
+      cx:xPx(p.xs[i]),cy:yPx(p.ys[i]),r:9,
+      fill:"#fff",stroke:"#111","stroke-width":3
+    }));
+    svg.appendChild(el("circle",{
+      cx:xPx(p.xs[i]),cy:yPx(p.ys[i]),r:4,
+      fill:"#111"
+    }));
+  });
+
+  // label selected points a and b
+  const aLabel=el("text",{
+    x:xPx(p.a)-12,
+    y:yPx(p.fA)-14,
+    "font-size":20,
+    "font-family":"Arial",
+    "font-weight":"700"
+  });
+  aLabel.textContent="a";
+  svg.appendChild(aLabel);
+
+  const bLabel=el("text",{
+    x:xPx(p.b)+10,
+    y:yPx(p.fB)-14,
+    "font-size":20,
+    "font-family":"Arial",
+    "font-weight":"700"
+  });
+  bLabel.textContent="b";
+  svg.appendChild(bLabel);
+}
+
+function renderChoices(p){
+  const radios=document.querySelectorAll('input[name="choice"]');
+  p.choices.forEach((choice,i)=>{
+    document.getElementById(`choice${i}`).innerHTML=
+      fractionHTML(choice.n1,choice.n2,choice.d1,choice.d2);
+    radios[i].checked=false;
+    radios[i].dataset.correct=choice.correct?"true":"false";
+  });
+}
+
+function newProblem(){
+  currentProblem=generateProblem();
+  answered=false;
+
+  document.getElementById("feedback").textContent="";
+  document.getElementById("feedback").className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  document.getElementById("promptText").textContent=
+    `Find the average rate of change on [${currentProblem.a}, ${currentProblem.b}].`;
+
+  drawGraph(currentProblem);
+  renderChoices(currentProblem);
+}
+
+function checkAnswer(){
+  if(answered) return;
+
+  const selected=document.querySelector('input[name="choice"]:checked');
+  const feedback=document.getElementById("feedback");
+
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+
+  answered=true;
+  attemptCount++;
+
+  if(selected.dataset.correct==="true"){
+    correctCount++;
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  } else {
+    feedback.textContent="Not quite.";
+    feedback.className="incorrect";
+  }
+
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("attemptCount").textContent=attemptCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",()=>{
+  answered ? newProblem() : checkAnswer();
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    answered ? newProblem() : checkAnswer();
+  }
+});
+
+newProblem();
+</script>
+</body>
+</html>
