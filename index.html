@@ -97,6 +97,11 @@ window.MathJax = {
 </div>
 
 <script>
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise(target ? [target] : undefined);
+  }
+}
 let correctCount = 0;
 let attemptCount = 0;
 let currentProblem = null;
