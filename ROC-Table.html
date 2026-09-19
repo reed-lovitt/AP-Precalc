@@ -278,6 +278,7 @@ function makeData() {
     iB = randInt(0, xs.length - 1);
   } while (
     iA === iB ||
+    Math.abs(iA - iB) < 2 ||
     ys[iA] === xs[iA] ||
     ys[iB] === xs[iB]
   );
