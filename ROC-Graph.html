@@ -73,6 +73,11 @@ window.MathJax = {
 <script>
 (function () {
   "use strict";
+  function typesetMath(target){
+    if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise(target ? [target] : undefined);
+    }
+  }
 
   var currentProblem = null;
   var answered = false;
