@@ -33,6 +33,13 @@ button:hover{background:#ededed}
   .choice-text{font-size:21px}
 }
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -60,6 +67,11 @@ button:hover{background:#ededed}
 
 <script>
 (function(){
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise(target ? [target] : undefined);
+  }
+}
 "use strict";
 
 var currentProblem=null;
@@ -78,8 +90,9 @@ function shuffle(arr){
   return a;
 }
 function complexText(a,b){
-  return String(a)+(b<0?" - ":" + ")+Math.abs(b)+"i";
+  return String(a)+(b<0?"-":"+")+Math.abs(b)+"i";
 }
+function math(s){ return "\\("+s+"\\)"; }
 
 function makeProblem(){
   var a=randInt(-9,9);
@@ -92,20 +105,20 @@ function makeProblem(){
 
   var prompt;
   if(factorMode){
-    answer="x - "+complexText(a,-shownImag);
-    prompt='If <span class="emph">x - '+complexText(a,shownImag)+'</span> is a <span class="emph">factor</span> of a polynomial with real coefficients, which expression must also be a <span class="emph">factor</span>?';
+    answer="x-("+complexText(a,-shownImag)+")";
+    prompt='If '+math("x-("+complexText(a,shownImag)+")")+' is a <span class="emph">factor</span> of a polynomial with real coefficients, which expression must also be a <span class="emph">factor</span>?';
   }else{
-    prompt='If <span class="emph">'+complexText(a,shownImag)+'</span> is a <span class="emph">zero</span> of a polynomial with real coefficients, which number must also be a <span class="emph">zero</span>?';
+    prompt='If '+math(complexText(a,shownImag))+' is a <span class="emph">zero</span> of a polynomial with real coefficients, which number must also be a <span class="emph">zero</span>?';
   }
 
   var distractors;
   if(factorMode){
     distractors=[
-      "x - "+complexText(-a,shownImag),
-      "x - "+complexText(-a,-shownImag),
-      "x - "+complexText(a,shownImag),
-      "x - "+complexText(a+1,-shownImag),
-      "x - "+complexText(a-1,-shownImag)
+      "x-("+complexText(-a,shownImag+ ")",
+      "x-("+complexText(-a,-shownImag+ ")",
+      "x-("+complexText(a,shownImag+ ")",
+      "x-("+complexText(a+1,-shownImag+ ")",
+      "x-("+complexText(a-1,-shownImag)
     ];
   }else{
     distractors=[
@@ -125,7 +138,7 @@ function makeProblem(){
   while(unique.length<3){
     var aa=randInt(-9,9);
     var bb=pick([1,2,3,4,5,6,7,8,9]);
-    var candidate=factorMode ? "x - "+complexText(aa,pick([bb,-bb])) : complexText(aa,pick([bb,-bb]));
+    var candidate=factorMode ? "x-("+complexText(aa,pick([bb,-bb]))+")" : complexText(aa,pick([bb,-bb]));
     if(candidate!==answer && unique.indexOf(candidate)===-1) unique.push(candidate);
   }
 
@@ -143,10 +156,11 @@ function makeProblem(){
 function renderChoices(p){
   var radios=document.querySelectorAll('input[name="choice"]');
   p.choices.forEach(function(c,i){
-    document.getElementById("choice"+i).textContent=c.text;
+    document.getElementById("choice"+i).innerHTML=math(c.text);
     radios[i].checked=false;
     radios[i].dataset.correct=c.correct?"true":"false";
   });
+  typesetMath(document.querySelector(".problem-box"));
 }
 
 function newProblem(){
