@@ -39,6 +39,13 @@ button:hover{background:#ededed}
   .choice-math{font-size:21px}
 }
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -120,15 +127,11 @@ button:hover{background:#ededed}
   }
 
   function subtraction(first,second){
-    return second < 0 ? first + "- (" + second + ")" : first + "- " + second;
+    return second < 0 ? first+"-("+second+")" : first+"-"+second;
   }
 
   function fractionHTML(n1,n2,d1,d2){
-    return '<span class="frac"><span class="num">' +
-      subtraction(n1,n2) +
-      '</span><span class="den">' +
-      subtraction(d1,d2) +
-      '</span></span>';
+    return "\\(\\frac{"+subtraction(n1,n2)+"}{"+subtraction(d1,d2)+"}\\)";
   }
 
   function choiceKey(choice){
@@ -267,6 +270,7 @@ button:hover{background:#ededed}
       radios[i].checked=false;
       radios[i].dataset.correct=choice.correct?"true":"false";
     });
+    typesetMath(document.querySelector(".problem-box"));
   }
 
   function newProblem(){
@@ -278,7 +282,7 @@ button:hover{background:#ededed}
       feedback.textContent="";
       feedback.className="";
       actionButton.textContent="Check Answer";
-      promptText.textContent="Find the average rate of change on ["+currentProblem.a+", "+currentProblem.b+"].";
+      promptText.innerHTML="Find the average rate of change on \\(["+currentProblem.a+", "+currentProblem.b+"]\\).";
       drawGraph(currentProblem);
       renderChoices(currentProblem);
     }catch(err){
