@@ -169,8 +169,10 @@ function makeChoices(answer,givenY,holeQuestion){
     if(String(answer)!==key && pool.map(String).indexOf(key)===-1) pool.push(v);
   }
 
-  add(givenY);
-  add(-givenY);
+  if(givenY!==null){
+    add(givenY);
+    add(-givenY);
+  }
   add(0);
   if(holeQuestion) add("undefined");
   add(answer+1);
@@ -194,90 +196,86 @@ function makeProblem(){
   var type=Math.random()<0.5 ? "even" : "odd";
   var holeQuestion=Math.random()<0.5;
 
-  // Always show exactly two pieces:
-  //   outer right: 3 < x <= 6
-  //   inner left: -3 < x <= 0
-  // Both pieces have an open endpoint at x = +/-3.
-  var outerOpenY=randInt(-4,4);
-  var outerMidY=randInt(-5,5);
-  var outerEndY=randInt(-5,5);
+  // Fixed visible domains:
+  // left piece:  -3 < x <= 0
+  // right piece:  3 < x <= 6
+  // Both x=±3 endpoints are always open.
+  // Interior x-values are distinct, so no segment can be vertical.
 
-  var innerOpenY=randInt(-4,4);
-  var innerMidY=randInt(-5,5);
-  var innerZeroY=type==="odd" ? 0 : randInt(-5,5);
+  var leftMidX=pick([-2,-1]);
+  var rightMidX=pick([4,5]);
 
-  var outerMidX=pick([4,5]);
-  var innerMidX=pick([-2,-1]);
+  var leftOpenY=randInt(-4,4);
+  var leftMidY=randInt(-5,5);
+  var leftEndY=type==="odd" ? 0 : randInt(-5,5);
 
-  var actualX, givenX, givenY, answer;
-  var actualPointAtHole=null;
+  var rightOpenY=randInt(-4,4);
+  var rightMidY=randInt(-5,5);
+  var rightEndY=randInt(-5,5);
+
+  var left=[[-3,leftOpenY],[leftMidX,leftMidY],[0,leftEndY]];
+  var right=[[3,rightOpenY],[rightMidX,rightMidY],[6,rightEndY]];
+
+  var givenX,givenY,askX,answer;
 
   if(holeQuestion){
-    // The open circle at +/-3 is NOT the function value.
-    // Put a separate filled point at one of those x-values and ask for
-    // the symmetric value at the opposite x-value.
+    // Since x=±3 are holes, the corresponding function value is undefined.
     givenX=Math.random()<0.5 ? 3 : -3;
-    actualX=-givenX;
-
-    do{
-      givenY=randInt(-5,5);
-    }while(
-      (givenX===3 && givenY===outerOpenY) ||
-      (givenX===-3 && givenY===innerOpenY)
-    );
-
-    answer=yForParity(type,givenY);
-    actualPointAtHole=[givenX,givenY];
+    askX=-givenX;
+    givenY=null;
+    answer="undefined";
   }else{
-    // Ask about the missing symmetric counterpart of a normal displayed point.
     var displayed=pick([
-      [outerMidX,outerMidY],
-      [6,outerEndY],
-      [innerMidX,innerMidY]
+      [leftMidX,leftMidY],
+      [0,leftEndY],
+      [rightMidX,rightMidY],
+      [6,rightEndY]
     ]);
+
+    // Avoid asking for f(0) in odd problems because it is trivially 0.
+    if(type==="odd" && displayed[0]===0){
+      displayed=pick([
+        [leftMidX,leftMidY],
+        [rightMidX,rightMidY],
+        [6,rightEndY]
+      ]);
+    }
+
     givenX=displayed[0];
     givenY=displayed[1];
-    actualX=-givenX;
-    answer=yForParity(type,givenY);
+    askX=-givenX;
+    answer=type==="even" ? givenY : -givenY;
   }
 
   return {
     type:type,
     holeQuestion:holeQuestion,
-    outer:[[3,outerOpenY],[outerMidX,outerMidY],[6,outerEndY]],
-    inner:[[-3,innerOpenY],[innerMidX,innerMidY],[0,innerZeroY]],
+    left:left,
+    right:right,
     givenX:givenX,
     givenY:givenY,
-    askX:actualX,
+    askX:askX,
     answer:answer,
-    actualPointAtHole:actualPointAtHole,
     choices:makeChoices(answer,givenY,holeQuestion)
   };
 }
-
 function drawProblem(p){
   svg.innerHTML="";
   drawGrid();
 
-  addPolyline(p.outer);
-  addPolyline(p.inner);
+  addPolyline(p.left);
+  addPolyline(p.right);
 
-  // Outer-right piece: open at x=3, closed at x=6.
-  addOpenPoint(p.outer[0][0],p.outer[0][1]);
-  addFilledPoint(p.outer[1][0],p.outer[1][1]);
-  addFilledPoint(p.outer[2][0],p.outer[2][1]);
+  // Left piece: open at x=-3, closed at x=0.
+  addOpenPoint(p.left[0][0],p.left[0][1]);
+  addFilledPoint(p.left[1][0],p.left[1][1]);
+  addFilledPoint(p.left[2][0],p.left[2][1]);
 
-  // Inner-left piece: open at x=-3, closed at x=0.
-  addOpenPoint(p.inner[0][0],p.inner[0][1]);
-  addFilledPoint(p.inner[1][0],p.inner[1][1]);
-  addFilledPoint(p.inner[2][0],p.inner[2][1]);
-
-  // In hole questions, one x=+/-3 also has a separate filled point.
-  if(p.actualPointAtHole){
-    addFilledPoint(p.actualPointAtHole[0],p.actualPointAtHole[1]);
-  }
+  // Right piece: open at x=3, closed at x=6.
+  addOpenPoint(p.right[0][0],p.right[0][1]);
+  addFilledPoint(p.right[1][0],p.right[1][1]);
+  addFilledPoint(p.right[2][0],p.right[2][1]);
 }
-
 function renderChoices(p){
   var radios=document.querySelectorAll('input[name="choice"]');
   p.choices.forEach(function(c,i){
