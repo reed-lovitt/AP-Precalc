@@ -1,290 +1,347 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AP Precalculus — Rate & Concavity Practice</title>
-  <style>
-    :root{
-      --bg:#f7f8fa; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
-      --border:#d1d5db; --accent:#2563eb; --accent2:#e8f0ff;
-      --good:#166534; --goodbg:#f0fdf4; --bad:#991b1b; --badbg:#fef2f2;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg); color:var(--text);
-    }
-    .wrap{max-width:860px;margin:0 auto;padding:18px}
-    header{
-      display:flex;justify-content:space-between;align-items:flex-end;gap:14px;
-      border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px;
-    }
-    h1{font-size:1.35rem;margin:0}
-    .sub{color:var(--muted);font-size:.95rem;margin-top:3px}
-    .score{display:flex;gap:16px;font-size:.95rem;white-space:nowrap}
-    .card{
-      background:var(--card);border:1px solid var(--border);border-radius:14px;
-      padding:18px;
-    }
-    .prompt{font-size:1.15rem;font-weight:700;margin-bottom:8px}
-    .graphWrap{display:flex;justify-content:center;margin:8px 0 14px}
-    svg{width:100%;max-width:620px;height:auto}
-    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    label.choice{
-      display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);
-      border-radius:10px;padding:12px;cursor:pointer;background:#fff;
-    }
-    label.choice:hover{background:#fafafa}
-    input[type="radio"]{margin-top:3px;transform:scale(1.15)}
-    .feedback{
-      margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;
-      display:none;
-    }
-    .feedback.good{display:block;background:var(--goodbg);color:var(--good)}
-    .feedback.bad{display:block;background:var(--badbg);color:var(--bad)}
-    .feedback.neutral{display:block;background:#fff;color:var(--text)}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    button{
-      min-height:44px;border-radius:9px;border:1px solid var(--border);
-      padding:10px 16px;font-weight:700;font-size:1rem;cursor:pointer;background:#fff;
-    }
-    button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    .small{font-size:.9rem;color:var(--muted);margin-top:10px}
-    @media (max-width:640px){
-      .choices{grid-template-columns:1fr}
-      header{align-items:flex-start;flex-direction:column}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interval Notation Practice</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; color:#111; font-family:Arial,Helvetica,sans-serif; }
+  .page { max-width:900px; margin:28px auto; padding:0 18px; }
+  h1 { margin:0 0 8px; font-size:30px; }
+  .subtitle { font-size:17px; color:#444; margin-bottom:22px; }
+  .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
+  .score { margin-left:auto; font-size:17px; }
+  .problem-box { border:1.5px solid #111; padding:22px; }
+  .question { font-size:20px; font-weight:700; margin-bottom:12px; }
+  #graph { width:100%; height:165px; display:block; margin-bottom:12px; }
+  .choices { display:grid; grid-template-columns:1fr; gap:10px; }
+  .choice {
+    border:1.5px solid #111; padding:12px 14px; display:flex; align-items:center;
+    gap:10px; cursor:pointer; background:#fff;
+  }
+  .choice:hover { background:#f2f2f2; }
+  .choice input { transform:scale(1.15); margin:0; }
+  .choice-letter { font-weight:700; min-width:24px; }
+  .choice-text { font-family:"Times New Roman",Times,serif; font-size:23px; }
+  .button-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+  button { font-size:17px; padding:11px 18px; border:1.5px solid #111; background:#fff; cursor:pointer; }
+  button:hover { background:#ededed; }
+  #feedback { min-height:30px; margin-top:16px; font-size:19px; font-weight:700; }
+  .correct { color:#16752b; }
+  .incorrect { color:#b52222; }
+  .note { margin-top:20px; font-size:14px; color:#555; line-height:1.45; }
+  @media(max-width:650px){
+    .page{padding:0 12px;margin-top:18px}
+    .problem-box{padding:16px}
+    .score{width:100%;margin-left:0}
+    .choice-text{font-size:20px}
+    #graph{height:145px}
+  }
+</style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Rate of Change & Concavity Practice</h1>
-      <div class="sub">AP Precalculus — one fresh graph at a time</div>
-    </div>
-    <div class="score">
-      <span><strong id="correct">0</strong> correct</span>
-      <span><strong id="attempted">0</strong> attempted</span>
-    </div>
-  </header>
+<div class="page">
+  <h1>Interval Notation Practice</h1>
+  <div class="subtitle">Choose the interval notation that matches the number line.</div>
 
-  <main class="card">
-    <div id="prompt" class="prompt"></div>
-    <div id="graph" class="graphWrap"></div>
-    <div id="choices" class="choices"></div>
-    <div id="feedback" class="feedback" aria-live="polite"></div>
-  </main>
-
-  <div class="actions">
-    <button id="check" class="primary">Check Answer</button>
-    <button id="next" disabled>Next Problem</button>
-    <button id="reset">Reset Score</button>
+  <div class="topbar">
+    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
   </div>
-  <div class="small">Graphs and question wording are generated in your browser. Reloading the page creates a new problem.</div>
+
+  <div class="problem-box">
+    <div class="question">Which interval notation matches the graph below?</div>
+
+    <svg id="graph" viewBox="0 0 800 165" aria-label="number line">
+      <!-- static starter problem so previews still show something -->
+      <line x1="80" y1="72" x2="720" y2="72" stroke="#111" stroke-width="3"/>
+      <polygon points="80,72 92,65 92,79" fill="#111"/>
+      <polygon points="720,72 708,65 708,79" fill="#111"/>
+
+      <line x1="80" y1="72" x2="280" y2="72" stroke="#111" stroke-width="10"/>
+      <polygon points="80,72 98,62 98,82" fill="#111"/>
+      <line x1="520" y1="72" x2="720" y2="72" stroke="#111" stroke-width="10"/>
+      <polygon points="720,72 702,62 702,82" fill="#111"/>
+
+      <circle cx="280" cy="72" r="9" fill="#fff" stroke="#111" stroke-width="3"/>
+      <circle cx="520" cy="72" r="9" fill="#111" stroke="#111" stroke-width="3"/>
+
+      <g font-family="Arial" font-size="22" text-anchor="middle">
+        <text x="280" y="120">-4</text>
+        <text x="520" y="120">7</text>
+      </g>
+    </svg>
+
+    <form id="choicesForm" class="choices">
+      <label class="choice"><input type="radio" name="choice" value="0"><span class="choice-letter">A.</span><span class="choice-text" id="choiceText0">(-∞, -4) ∪ (7, ∞)</span></label>
+      <label class="choice"><input type="radio" name="choice" value="1"><span class="choice-letter">B.</span><span class="choice-text" id="choiceText1">(-∞, -4] ∪ (7, ∞)</span></label>
+      <label class="choice"><input type="radio" name="choice" value="2"><span class="choice-letter">C.</span><span class="choice-text" id="choiceText2">(-∞, -4) ∪ [7, ∞)</span></label>
+      <label class="choice"><input type="radio" name="choice" value="3"><span class="choice-letter">D.</span><span class="choice-text" id="choiceText3">(-∞, -4] ∪ [7, ∞)</span></label>
+    </form>
+
+    <div class="button-row">
+      <button id="actionButton" type="button">Check Answer</button>
+    </div>
+
+    <div id="feedback"></div>
+
+
+  </div>
 </div>
 
 <script>
-(() => {
-  const $ = s => document.querySelector(s);
-  const promptEl = $('#prompt'), graphEl = $('#graph'), choicesEl = $('#choices');
-  const feedbackEl = $('#feedback'), checkBtn = $('#check'), nextBtn = $('#next');
-  const correctEl = $('#correct'), attemptedEl = $('#attempted');
+let correctCount = 0;
+let attemptCount = 0;
+let currentProblem = null;
+let answered = false;
 
-  let correct = 0, attempted = 0, locked = false, current = null, lastState = null;
-  const rand = a => a[Math.floor(Math.random()*a.length)];
-  const shuffle = a => {
-    const b=[...a];
-    for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}
-    return b;
-  };
+const svg = document.getElementById("graph");
+const feedback = document.getElementById("feedback");
 
-  const states = {
-    IU:{inc:true,  up:true,  std:'increasing and concave up',
-        natural:'increasing at an increasing rate',
-        slope:'positive rate of change and concave up',
-        roc:'positive rate of change and an increasing rate of change'},
-    ID:{inc:true,  up:false, std:'increasing and concave down',
-        natural:'increasing at a decreasing rate',
-        slope:'positive rate of change and concave down',
-        roc:'positive rate of change and a decreasing rate of change'},
-    DU:{inc:false, up:true,  std:'decreasing and concave up',
-        natural:'decreasing at a decreasing rate',
-        slope:'negative rate of change and concave up',
-        roc:'negative rate of change and an increasing rate of change'},
-    DD:{inc:false, up:false, std:'decreasing and concave down',
-        natural:'decreasing at an increasing rate',
-        slope:'negative rate of change and concave down',
-        roc:'negative rate of change and a decreasing rate of change'}
-  };
+const axisY = 72;
+const axisLeft = 80;
+const axisRight = 720;
 
-  const promptMakers = [
-    s => ({
-      stem:'Which statement best describes the function on the interval shown?',
-      answer:s.std,
-      options:Object.values(states).map(x=>x.std)
-    }),
-    s => ({
-      stem:'Which statement correctly describes the rate of change and concavity?',
-      answer:s.slope,
-      options:Object.values(states).map(x=>x.slope)
-    }),
-    s => ({
-      stem:'How is the function changing on the interval shown?',
-      answer:s.natural,
-      options:Object.values(states).map(x=>x.natural)
-    }),
-    s => ({
-      stem:'Which description of the function and its rate of change is correct?',
-      answer:s.roc,
-      options:Object.values(states).map(x=>x.roc)
-    }),
-    s => {
-      const a = `${s.inc?'The function is increasing':'The function is decreasing'}, and its rate of change is ${s.up?'increasing':'decreasing'}.`;
-      return {
-        stem:'As x increases, what happens to the function and to its rate of change?',
-        answer:a,
-        options:Object.values(states).map(x =>
-          `${x.inc?'The function is increasing':'The function is decreasing'}, and its rate of change is ${x.up?'increasing':'decreasing'}.`
-        )
-      };
-    }
+// fixed visual positions — numbers are labels only, not to scale
+const xA = 250;
+const xB = 410;
+const xC = 570;
+
+// open circles slightly overrepresented
+const OPEN_PROBABILITY = 0.60;
+
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function isOpen(){ return Math.random() < OPEN_PROBABILITY; }
+
+function getDistinctSortedNumbers(count){
+  const set = new Set();
+  while(set.size < count){
+    set.add(randInt(-25,25));
+  }
+  return [...set].sort((a,b)=>a-b);
+}
+
+function el(type, attrs={}){
+  const e = document.createElementNS("http://www.w3.org/2000/svg", type);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function clearGraph(){ svg.innerHTML=""; }
+
+function drawBase(){
+  svg.appendChild(el("line",{x1:axisLeft,y1:axisY,x2:axisRight,y2:axisY,stroke:"#111","stroke-width":3}));
+  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+12},${axisY-7} ${axisLeft+12},${axisY+7}`,fill:"#111"}));
+  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-12},${axisY-7} ${axisRight-12},${axisY+7}`,fill:"#111"}));
+}
+
+function drawLabel(x,text){
+  const t = el("text",{x:x,y:120,"text-anchor":"middle","font-family":"Arial","font-size":22,fill:"#111"});
+  t.textContent = text;
+  svg.appendChild(t);
+}
+
+function drawEndpoint(x,closed){
+  svg.appendChild(el("circle",{cx:x,cy:axisY,r:9,fill:closed?"#111":"#fff",stroke:"#111","stroke-width":3}));
+}
+
+function drawSegment(x1,x2){
+  svg.appendChild(el("line",{x1:x1,y1:axisY,x2:x2,y2:axisY,stroke:"#111","stroke-width":10,"stroke-linecap":"butt"}));
+}
+
+function drawLeftRayArrow(){
+  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+18},${axisY-10} ${axisLeft+18},${axisY+10}`,fill:"#111"}));
+}
+
+function drawRightRayArrow(){
+  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-18},${axisY-10} ${axisRight-18},${axisY+10}`,fill:"#111"}));
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function fmtLeftInfinity(a,b,c,aClosed,bClosed){
+  return `(-∞, ${a}${aClosed?"]":")"} ∪ ${bClosed?"[":"("}${b}, ${c}]`;
+}
+
+function fmtRightInfinity(a,b,c,bClosed,cClosed){
+  return `[${a}, ${b}${bClosed?"]":")"} ∪ ${cClosed?"[":"("}${c}, ∞)`;
+}
+
+function fmtBothInfinity(a,b,aClosed,bClosed){
+  return `(-∞, ${a}${aClosed?"]":")"} ∪ ${bClosed?"[":"("}${b}, ∞)`;
+}
+
+function makeProblem(){
+  // exactly equal weighting among the three structures
+  const type = ["left","right","both"][randInt(0,2)];
+
+  if(type==="left"){
+    const [a,b,c] = getDistinctSortedNumbers(3);
+    const aClosed = !isOpen();
+    const bClosed = !isOpen();
+
+    const combos = [
+      {ac:false, bc:false},
+      {ac:true,  bc:false},
+      {ac:false, bc:true},
+      {ac:true,  bc:true}
+    ];
+
+    return {
+      type,a,b,c,aClosed,bClosed,
+      choices: shuffle(combos.map(o=>({
+        text: fmtLeftInfinity(a,b,c,o.ac,o.bc),
+        correct: o.ac===aClosed && o.bc===bClosed
+      })))
+    };
+  }
+
+  if(type==="right"){
+    const [a,b,c] = getDistinctSortedNumbers(3);
+    const bClosed = !isOpen();
+    const cClosed = !isOpen();
+
+    const combos = [
+      {bc:false, cc:false},
+      {bc:true,  cc:false},
+      {bc:false, cc:true},
+      {bc:true,  cc:true}
+    ];
+
+    return {
+      type,a,b,c,bClosed,cClosed,
+      choices: shuffle(combos.map(o=>({
+        text: fmtRightInfinity(a,b,c,o.bc,o.cc),
+        correct: o.bc===bClosed && o.cc===cClosed
+      })))
+    };
+  }
+
+  const [a,b] = getDistinctSortedNumbers(2);
+  const aClosed = !isOpen();
+  const bClosed = !isOpen();
+
+  const combos = [
+    {ac:false, bc:false},
+    {ac:true,  bc:false},
+    {ac:false, bc:true},
+    {ac:true,  bc:true}
   ];
 
-  function chooseState(){
-    const keys=Object.keys(states).filter(k=>k!==lastState);
-    const key=rand(keys);
-    lastState=key;
-    return {key, ...states[key]};
+  return {
+    type,a,b,aClosed,bClosed,
+    choices: shuffle(combos.map(o=>({
+      text: fmtBothInfinity(a,b,o.ac,o.bc),
+      correct: o.ac===aClosed && o.bc===bClosed
+    })))
+  };
+}
+
+function drawProblem(p){
+  clearGraph();
+  drawBase();
+
+  if(p.type==="left"){
+    drawSegment(axisLeft,xA);
+    drawLeftRayArrow();
+    drawSegment(xB,xC);
+    drawEndpoint(xA,p.aClosed);
+    drawEndpoint(xB,p.bClosed);
+    drawEndpoint(xC,true);
+    drawLabel(xA,p.a);
+    drawLabel(xB,p.b);
+    drawLabel(xC,p.c);
   }
-
-  function makeCurve(state){
-    const fam = rand(['exponential','parabola','radical']);
-    const letter = rand(['f','g','h','m','p','r']);
-    let xmin,xmax,ymin=-5,ymax=5,fn;
-
-    if(fam==='exponential'){
-      xmin=-2.4; xmax=2.4;
-      if(state.key==='IU') fn=x=> 0.62*Math.exp(0.9*x)-1.2;
-      if(state.key==='ID') fn=x=>-0.62*Math.exp(-0.9*x)+1.2;
-      if(state.key==='DU') fn=x=> 0.62*Math.exp(-0.9*x)-1.2;
-      if(state.key==='DD') fn=x=>-0.62*Math.exp(0.9*x)+1.2;
-    }
-
-    if(fam==='parabola'){
-      if(state.key==='IU'){ xmin=0; xmax=4; fn=x=>0.42*x*x-3.0; }
-      if(state.key==='ID'){ xmin=-4; xmax=0; fn=x=>-0.42*x*x+3.0; }
-      if(state.key==='DU'){ xmin=-4; xmax=0; fn=x=>0.42*x*x-3.0; }
-      if(state.key==='DD'){ xmin=0; xmax=4; fn=x=>-0.42*x*x+3.0; }
-    }
-
-    if(fam==='radical'){
-      if(state.key==='IU'){ xmin=-4.5; xmax=-0.25; fn=x=>-2.0*Math.sqrt(-x)+3.3; }
-      if(state.key==='ID'){ xmin=0.25; xmax=4.5; fn=x=> 2.0*Math.sqrt(x)-3.3; }
-      if(state.key==='DU'){ xmin=0.25; xmax=4.5; fn=x=>-2.0*Math.sqrt(x)+3.3; }
-      if(state.key==='DD'){ xmin=-4.5; xmax=-0.25; fn=x=> 2.0*Math.sqrt(-x)-3.3; }
-    }
-
-    return {fam,letter,xmin,xmax,ymin,ymax,fn};
+  else if(p.type==="right"){
+    drawSegment(xA,xB);
+    drawSegment(xC,axisRight);
+    drawRightRayArrow();
+    drawEndpoint(xA,true);
+    drawEndpoint(xB,p.bClosed);
+    drawEndpoint(xC,p.cClosed);
+    drawLabel(xA,p.a);
+    drawLabel(xB,p.b);
+    drawLabel(xC,p.c);
   }
-
-  function graphSVG(spec){
-    const W=600,H=300,p=34;
-    const sx=x=>p+(x-spec.xmin)*(W-2*p)/(spec.xmax-spec.xmin);
-    const sy=y=>H-p-(y-spec.ymin)*(H-2*p)/(spec.ymax-spec.ymin);
-    let grid='';
-    for(let i=0;i<=8;i++){
-      const x=p+i*(W-2*p)/8;
-      grid += `<line x1="${x}" y1="${p}" x2="${x}" y2="${H-p}" stroke="#d7dbe0" stroke-width="0.8"/>`;
-    }
-    for(let i=0;i<=8;i++){
-      const y=p+i*(H-2*p)/8;
-      grid += `<line x1="${p}" y1="${y}" x2="${W-p}" y2="${y}" stroke="#d7dbe0" stroke-width="0.8"/>`;
-    }
-
-    const y0=(spec.ymin<=0&&spec.ymax>=0)?sy(0):(H-p);
-    const x0=(spec.xmin<=0&&spec.xmax>=0)?sx(0):p;
-    let d='';
-    let started=false;
-    for(let i=0;i<=220;i++){
-      const x=spec.xmin+(spec.xmax-spec.xmin)*i/220;
-      const y=spec.fn(x);
-      if(Number.isFinite(y) && y>=spec.ymin-.8 && y<=spec.ymax+.8){
-        d += `${started?'L':'M'}${sx(x).toFixed(1)} ${sy(y).toFixed(1)} `;
-        started=true;
-      }
-    }
-
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of ${spec.letter}">
-      ${grid}
-      <line x1="${p}" y1="${y0}" x2="${W-p}" y2="${y0}" stroke="#20242a" stroke-width="1.6"/>
-      <line x1="${x0}" y1="${p}" x2="${x0}" y2="${H-p}" stroke="#20242a" stroke-width="1.6"/>
-      <text x="${W-p+7}" y="${y0-7}" font-size="14" fill="#20242a">x</text>
-      <text x="${x0+7}" y="${p+5}" font-size="14" fill="#20242a">y</text>
-      <path d="${d}" fill="none" stroke="#20242a" stroke-width="3.4" stroke-linecap="round"/>
-      <text x="${W/2}" y="${H-7}" text-anchor="middle" font-size="14" fill="#6b7280">Graph of ${spec.letter}</text>
-    </svg>`;
+  else {
+    drawSegment(axisLeft,xA);
+    drawLeftRayArrow();
+    drawSegment(xC,axisRight);
+    drawRightRayArrow();
+    drawEndpoint(xA,p.aClosed);
+    drawEndpoint(xC,p.bClosed);
+    drawLabel(xA,p.a);
+    drawLabel(xC,p.b);
   }
+}
 
-  function newProblem(){
-    locked=false;
-    checkBtn.disabled=false;
-    nextBtn.disabled=true;
-    feedbackEl.className='feedback';
-    feedbackEl.innerHTML='';
-
-    const state=chooseState();
-    const spec=makeCurve(state);
-    const style=rand(promptMakers)(state);
-    const options=shuffle(style.options);
-    current={state,spec,answer:style.answer,options};
-
-    promptEl.textContent=style.stem;
-    graphEl.innerHTML=graphSVG(spec);
-    choicesEl.innerHTML=options.map((o,i)=>`
-      <label class="choice">
-        <input type="radio" name="answer" value="${i}">
-        <span>${o}</span>
-      </label>`).join('');
-  }
-
-  function check(){
-    if(locked) return;
-    const pick=document.querySelector('input[name="answer"]:checked');
-    if(!pick){
-      feedbackEl.className='feedback neutral';
-      feedbackEl.innerHTML='<strong>Choose an answer first.</strong>';
-      return;
-    }
-    locked=true;
-    attempted++;
-    const chosen=current.options[Number(pick.value)];
-    const ok=chosen===current.answer;
-    if(ok) correct++;
-    correctEl.textContent=correct;
-    attemptedEl.textContent=attempted;
-    checkBtn.disabled=true;
-    nextBtn.disabled=false;
-
-    const s=current.state;
-    const explanation = `The function is <strong>${s.inc?'increasing':'decreasing'}</strong>, so its rate of change is <strong>${s.inc?'positive':'negative'}</strong>. The graph is <strong>concave ${s.up?'up':'down'}</strong>, so the rate of change is <strong>${s.up?'increasing':'decreasing'}</strong>.`;
-
-    feedbackEl.className='feedback '+(ok?'good':'bad');
-    feedbackEl.innerHTML = ok
-      ? `<strong>✓ Correct</strong><div style="margin-top:6px">${explanation}</div>`
-      : `<strong>✗ Not quite</strong><div style="margin-top:6px">${explanation}</div><div style="margin-top:6px">Correct answer: <strong>${current.answer}</strong></div>`;
-  }
-
-  $('#check').addEventListener('click',check);
-  $('#next').addEventListener('click',newProblem);
-  $('#reset').addEventListener('click',()=>{
-    correct=0;attempted=0;correctEl.textContent='0';attemptedEl.textContent='0';newProblem();
+function renderChoices(p){
+  const radios=document.querySelectorAll('input[name="choice"]');
+  p.choices.forEach((choice,i)=>{
+    document.getElementById(`choiceText${i}`).textContent=choice.text;
+    radios[i].checked=false;
+    radios[i].disabled=false;
+    radios[i].dataset.correct=choice.correct?"true":"false";
   });
+}
 
-  newProblem();
-})();
+function newProblem(){
+  currentProblem=makeProblem();
+  answered=false;
+  feedback.textContent="";
+  feedback.className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  drawProblem(currentProblem);
+  renderChoices(currentProblem);
+}
+
+function checkAnswer(){
+  if(answered) return;
+  const selected=document.querySelector('input[name="choice"]:checked');
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+
+  attemptCount++;
+  answered=true;
+
+  if(selected.dataset.correct==="true"){
+    correctCount++;
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  } else {
+    const answer=currentProblem.choices.find(c=>c.correct).text;
+    feedback.textContent=`Not quite. Correct answer: ${answer}`;
+    feedback.className="incorrect";
+  }
+
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("attemptCount").textContent=attemptCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",()=>{
+  answered ? newProblem() : checkAnswer();
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    answered ? newProblem() : checkAnswer();
+  }
+});
+
+// Generate a fully functional first problem as soon as the page loads.
+newProblem();
 </script>
 </body>
 </html>
