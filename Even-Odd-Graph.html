@@ -162,11 +162,11 @@ function yForParity(type,y){
   return type==="even" ? y : -y;
 }
 
-function makeChoices(answer,givenY,holeQuestion){
+function makeChoices(answer,givenY){
   var pool=[];
   function add(v){
-    var key=String(v);
-    if(String(answer)!==key && pool.map(String).indexOf(key)===-1) pool.push(v);
+    if(v===answer) return;
+    if(pool.indexOf(v)===-1) pool.push(v);
   }
 
   if(givenY!==null){
@@ -174,7 +174,6 @@ function makeChoices(answer,givenY,holeQuestion){
     add(-givenY);
   }
   add(0);
-  if(holeQuestion) add("undefined");
   add(answer+1);
   add(answer-1);
   add(1);
@@ -194,25 +193,16 @@ function makeChoices(answer,givenY,holeQuestion){
 
 function makeProblem(){
   var type=Math.random()<0.5 ? "even" : "odd";
-  var holeQuestion=Math.random()<0.5;
+  var asksAboutDisjointDot=Math.random()<0.5;
 
-  // The positive side shows exactly ONE of these:
-  //   inner: [0,3)
-  //   outer: (3,6]
+  // Exactly one visible positive-side interval:
+  //   [0,3)   OR   (3,6]
   // The negative side shows the mirror of the positive interval that was skipped.
-  //
-  // So the two possible visible-domain patterns are:
-  //   positive [0,3)  + negative [-6,-3)
-  //   positive (3,6] + negative (-3,0]
-
   var positiveShowsInner=Math.random()<0.5;
 
   var posInnerMidX=pick([1,2]);
   var posOuterMidX=pick([4,5]);
-  var negInnerMidX=-posInnerMidX;
-  var negOuterMidX=-posOuterMidX;
 
-  // Build one source shape on the positive side for each interval.
   var inner0Y=type==="odd" ? 0 : randInt(-5,5);
   var innerMidY=randInt(-5,5);
   var innerOpenY=randInt(-4,4);
@@ -230,34 +220,43 @@ function makeProblem(){
     }).reverse();
   }
 
-  var posPiece, negPiece, posKind, negKind;
-
+  var posPiece,negPiece;
   if(positiveShowsInner){
-    posPiece=posInner;
-    posKind="inner";
-    negPiece=mirrorPiece(posOuter);   // skipped positive outer interval mirrored left
-    negKind="outer";
+    posPiece=posInner;           // [0,3)
+    negPiece=mirrorPiece(posOuter); // [-6,-3)
   }else{
-    posPiece=posOuter;
-    posKind="outer";
-    negPiece=mirrorPiece(posInner);   // skipped positive inner interval mirrored left
-    negKind="inner";
+    posPiece=posOuter;           // (3,6]
+    negPiece=mirrorPiece(posInner); // (-3,0]
   }
 
-  var displayedPoints=[];
-  posPiece.forEach(function(pt){ displayedPoints.push(pt); });
-  negPiece.forEach(function(pt){ displayedPoints.push(pt); });
+  // ALWAYS one separate filled dot at x=3 or x=-3.
+  var dotX=Math.random()<0.5 ? 3 : -3;
+  var openYAtDotX;
+
+  function endpointYAtX(piece,x){
+    for(var i=0;i<piece.length;i++){
+      if(piece[i][0]===x) return piece[i][1];
+    }
+    return null;
+  }
+
+  openYAtDotX=endpointYAtX(posPiece,dotX);
+  if(openYAtDotX===null) openYAtDotX=endpointYAtX(negPiece,dotX);
+
+  var dotY;
+  do{
+    dotY=randInt(-5,5);
+  }while(dotY===openYAtDotX);
 
   var givenX,givenY,askX,answer;
 
-  if(holeQuestion){
-    // x=3 and x=-3 are always open endpoints.
-    givenX=Math.random()<0.5 ? 3 : -3;
-    askX=-givenX;
-    givenY=null;
-    answer="undefined";
+  if(asksAboutDisjointDot){
+    givenX=dotX;
+    givenY=dotY;
+    askX=-dotX;
+    answer=type==="even" ? dotY : -dotY;
   }else{
-    // Pick a normal displayed point whose symmetric counterpart is missing.
+    var displayedPoints=posPiece.concat(negPiece);
     var candidates=displayedPoints.filter(function(pt){
       return pt[0]!==3 && pt[0]!==-3 && pt[0]!==0;
     });
@@ -271,18 +270,18 @@ function makeProblem(){
 
   return {
     type:type,
-    holeQuestion:holeQuestion,
     posPiece:posPiece,
     negPiece:negPiece,
-    posKind:posKind,
-    negKind:negKind,
+    dotX:dotX,
+    dotY:dotY,
     givenX:givenX,
     givenY:givenY,
     askX:askX,
     answer:answer,
-    choices:makeChoices(answer,givenY,holeQuestion)
+    choices:makeChoices(answer,givenY)
   };
 }
+
 function drawProblem(p){
   svg.innerHTML="";
   drawGrid();
@@ -290,22 +289,21 @@ function drawProblem(p){
   addPolyline(p.negPiece);
   addPolyline(p.posPiece);
 
-  function drawPiece(piece,kind){
+  function drawPiece(piece){
     for(var i=0;i<piece.length;i++){
       var x=piece[i][0], y=piece[i][1];
-      var isHole=(x===3 || x===-3);
-
-      if(isHole){
-        addOpenPoint(x,y);
-      }else{
-        addFilledPoint(x,y);
-      }
+      if(x===3 || x===-3) addOpenPoint(x,y);
+      else addFilledPoint(x,y);
     }
   }
 
-  drawPiece(p.negPiece,p.negKind);
-  drawPiece(p.posPiece,p.posKind);
+  drawPiece(p.negPiece);
+  drawPiece(p.posPiece);
+
+  // Separate function value at one of the holes.
+  addFilledPoint(p.dotX,p.dotY);
 }
+
 function renderChoices(p){
   var radios=document.querySelectorAll('input[name="choice"]');
   p.choices.forEach(function(c,i){
