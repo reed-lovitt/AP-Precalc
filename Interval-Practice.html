@@ -59,9 +59,9 @@
       <polygon points="720,72 708,65 708,79" fill="#111"/>
 
       <line x1="80" y1="72" x2="280" y2="72" stroke="#111" stroke-width="10"/>
-      <polygon points="80,72 98,62 98,82" fill="#111"/>
+      <polygon points="80,72 94,66 94,78" fill="#111"/>
       <line x1="520" y1="72" x2="720" y2="72" stroke="#111" stroke-width="10"/>
-      <polygon points="720,72 702,62 702,82" fill="#111"/>
+      <polygon points="720,72 706,66 706,78" fill="#111"/>
 
       <circle cx="280" cy="72" r="9" fill="#fff" stroke="#111" stroke-width="3"/>
       <circle cx="520" cy="72" r="9" fill="#111" stroke="#111" stroke-width="3"/>
@@ -150,11 +150,11 @@ function drawSegment(x1,x2){
 }
 
 function drawLeftRayArrow(){
-  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+18},${axisY-10} ${axisLeft+18},${axisY+10}`,fill:"#111"}));
+  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+14},${axisY-6} ${axisLeft+14},${axisY+6}`,fill:"#111"}));
 }
 
 function drawRightRayArrow(){
-  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-18},${axisY-10} ${axisRight-18},${axisY+10}`,fill:"#111"}));
+  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-14},${axisY-6} ${axisRight-14},${axisY+6}`,fill:"#111"}));
 }
 
 function shuffle(arr){
