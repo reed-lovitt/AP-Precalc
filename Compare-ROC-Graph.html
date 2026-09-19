@@ -162,8 +162,8 @@ function makeProblem(){
   else answer=slope1>slope2 ? "x1" : "x2";
 
   var choices=shuffle([
-    {text:"At x = "+x1,correct:answer==="x1"},
-    {text:"At x = "+x2,correct:answer==="x2"},
+    {text:"At a",correct:answer==="x1"},
+    {text:"At b",correct:answer==="x2"},
     {text:"The rates of change are the same.",correct:answer==="same"}
   ]);
 
@@ -192,11 +192,14 @@ function drawCurve(p){
     "stroke-linecap":"round","stroke-linejoin":"round"
   }));
 
-  [p.x1,p.x2].forEach(function(x){
-    var y=p.fn(x);
-    svg.appendChild(svgEl("circle",{cx:xp(x),cy:yp(y),r:6,fill:"#111"}));
-    addText(xp(x),yp(y)-14,"x = "+x,{
-      "text-anchor":"middle","font-size":16,"font-family":"Arial","font-weight":"700"
+  [
+    {x:p.x1,label:"a"},
+    {x:p.x2,label:"b"}
+  ].forEach(function(item){
+    var y=p.fn(item.x);
+    svg.appendChild(svgEl("circle",{cx:xp(item.x),cy:yp(y),r:6,fill:"#111"}));
+    addText(xp(item.x),yp(y)-14,item.label,{
+      "text-anchor":"middle","font-size":18,"font-family":"Arial","font-weight":"700"
     });
   });
 }
@@ -216,7 +219,7 @@ function newProblem(){
   feedback.textContent="";
   feedback.className="";
   actionButton.textContent="Check Answer";
-  promptText.textContent="At which x-value is the rate of change greater?";
+  promptText.textContent="At which point is the rate of change greater?";
   drawCurve(currentProblem);
   renderChoices(currentProblem);
 }
