@@ -87,8 +87,8 @@ function makeProblem(){
   var shownImag=Math.random()<0.5 ? b : -b;
   var answer=complexText(a,-shownImag);
 
-  // 90% zero wording, 10% factor wording.
-  var factorMode=Math.random()<0.10;
+  // Keep factor-form questions rare.
+  var factorMode=Math.random()<0.05;
 
   var prompt;
   if(factorMode){
