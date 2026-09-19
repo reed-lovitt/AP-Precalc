@@ -235,22 +235,7 @@ button:hover{background:#ededed}
       }));
     }
 
-    [p.leftIndex,p.rightIndex].forEach(function(index){
-      svg.appendChild(svgEl("circle",{
-        cx:xPx(p.xs[index]),cy:yPx(p.ys[index]),r:9,
-        fill:"#fff",stroke:"#111","stroke-width":3
-      }));
-      svg.appendChild(svgEl("circle",{
-        cx:xPx(p.xs[index]),cy:yPx(p.ys[index]),r:4,fill:"#111"
-      }));
-    });
 
-    addText(xPx(p.a)-12,yPx(p.fA)-14,"a",{
-      "font-size":20,"font-family":"Arial","font-weight":"700"
-    });
-    addText(xPx(p.b)+10,yPx(p.fB)-14,"b",{
-      "font-size":20,"font-family":"Arial","font-weight":"700"
-    });
   }
 
   function renderChoices(p){
