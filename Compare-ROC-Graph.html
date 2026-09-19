@@ -74,7 +74,7 @@ var attemptCount=0;
 var currentProblem=null;
 
 var GL=72, GR=760, GT=24, GB=355;
-var XMIN=-6, XMAX=6, YMIN=-6, YMAX=6;
+var XMIN=-8, XMAX=8, YMIN=-8, YMAX=8;
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 function pick(arr){return arr[randInt(0,arr.length-1)];}
@@ -117,59 +117,66 @@ function drawGrid(){
     }));
   }
   for(x=XMIN;x<=XMAX;x++){
-    if(x!==0) addText(xp(x),yp(0)+22,String(x),{
+    if(x!==0 && x%2===0) addText(xp(x),yp(0)+22,String(x),{
       "text-anchor":"middle","font-size":14,"font-family":"Arial"
     });
   }
   for(y=YMIN;y<=YMAX;y++){
-    if(y!==0) addText(xp(0)-12,yp(y)+5,String(y),{
+    if(y!==0 && y%2===0) addText(xp(0)-12,yp(y)+5,String(y),{
       "text-anchor":"end","font-size":14,"font-family":"Arial"
     });
   }
 }
 
 function makeProblem(){
-  // 2/3 nonlinear quadratic, 1/3 linear so "same" is sometimes correct.
-  var linear=Math.random()<1/3;
-  var x1,x2;
-  do{
-    x1=randInt(-4,4);
-    x2=randInt(-4,4);
-  }while(x1===x2 || Math.abs(x1-x2)<2);
+  while(true){
+    // 2/3 nonlinear quadratic, 1/3 linear so "same" is sometimes correct.
+    var linear=Math.random()<1/3;
+    var x1,x2;
+    do{
+      x1=randInt(-5,5);
+      x2=randInt(-5,5);
+    }while(x1===x2 || Math.abs(x1-x2)<2);
 
-  if(x1>x2){var temp=x1;x1=x2;x2=temp;}
+    if(x1>x2){var temp=x1;x1=x2;x2=temp;}
 
-  var fn,slope1,slope2;
+    var fn,slope1,slope2;
 
-  if(linear){
-    var m;
-    do{m=pick([-1.5,-1,-0.5,0.5,1,1.5]);}while(m===0);
-    var b=randInt(-2,2);
-    fn=function(x){return m*x+b;};
-    slope1=m;
-    slope2=m;
-  }else{
-    var h=randInt(-2,2);
-    var a=pick([-0.35,-0.3,-0.25,0.25,0.3,0.35]);
-    var k=randInt(-2,2);
-    fn=function(x){return a*(x-h)*(x-h)+k;};
-    slope1=2*a*(x1-h);
-    slope2=2*a*(x2-h);
+    if(linear){
+      var m;
+      do{m=pick([-1.5,-1,-0.5,0.5,1,1.5]);}while(m===0);
+      var b=randInt(-2,2);
+      fn=function(x){return m*x+b;};
+      slope1=m;
+      slope2=m;
+    }else{
+      var h=randInt(-2,2);
+      var a=pick([-0.3,-0.25,-0.2,0.2,0.25,0.3]);
+      var k=randInt(-2,2);
+      fn=function(x){return a*(x-h)*(x-h)+k;};
+      slope1=2*a*(x1-h);
+      slope2=2*a*(x2-h);
+    }
+
+    var y1=fn(x1);
+    var y2=fn(x2);
+
+    // Keep both labeled comparison points comfortably inside the visible window.
+    if(y1<-6.5 || y1>6.5 || y2<-6.5 || y2>6.5) continue;
+
+    var answer;
+    if(Math.abs(slope1-slope2)<0.0001) answer="same";
+    else answer=slope1>slope2 ? "x1" : "x2";
+
+    var choices=shuffle([
+      {text:"At a",correct:answer==="x1"},
+      {text:"At b",correct:answer==="x2"},
+      {text:"The rates of change are the same.",correct:answer==="same"}
+    ]);
+
+    return {fn:fn,x1:x1,x2:x2,choices:choices};
   }
-
-  var answer;
-  if(Math.abs(slope1-slope2)<0.0001) answer="same";
-  else answer=slope1>slope2 ? "x1" : "x2";
-
-  var choices=shuffle([
-    {text:"At a",correct:answer==="x1"},
-    {text:"At b",correct:answer==="x2"},
-    {text:"The rates of change are the same.",correct:answer==="same"}
-  ]);
-
-  return {fn:fn,x1:x1,x2:x2,choices:choices};
 }
-
 function drawCurve(p){
   svg.innerHTML="";
   drawGrid();
