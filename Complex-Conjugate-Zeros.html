@@ -13,7 +13,7 @@ h1{margin:0 0 8px;font-size:30px}
 .topbar{display:flex;justify-content:flex-end;margin-bottom:18px}
 .score{font-size:17px}
 .problem-box{border:1.5px solid #111;padding:22px}
-.question{font-size:21px;font-weight:700;margin-bottom:18px;line-height:1.4}
+.question{font-size:21px;font-weight:700;margin-bottom:18px;line-height:1.4}.emph{font-weight:700;text-decoration:underline}
 .choices{display:grid;grid-template-columns:1fr;gap:10px}
 .choice{border:1.5px solid #111;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff}
 .choice:hover{background:#f2f2f2}
@@ -92,18 +92,30 @@ function makeProblem(){
 
   var prompt;
   if(factorMode){
-    prompt="If x - ("+complexText(a,shownImag)+") is a factor of a polynomial with real coefficients, which number must also be a zero?";
+    answer="x - "+complexText(a,-shownImag);
+    prompt='If <span class="emph">x - '+complexText(a,shownImag)+'</span> is a <span class="emph">factor</span> of a polynomial with real coefficients, which expression must also be a <span class="emph">factor</span>?';
   }else{
-    prompt="If "+complexText(a,shownImag)+" is a zero of a polynomial with real coefficients, which number must also be a zero?";
+    prompt='If <span class="emph">'+complexText(a,shownImag)+'</span> is a <span class="emph">zero</span> of a polynomial with real coefficients, which number must also be a <span class="emph">zero</span>?';
   }
 
-  var distractors=[
-    complexText(-a,shownImag),
-    complexText(-a,-shownImag),
-    complexText(a,shownImag),
-    complexText(a+1,-shownImag),
-    complexText(a-1,-shownImag)
-  ];
+  var distractors;
+  if(factorMode){
+    distractors=[
+      "x - "+complexText(-a,shownImag),
+      "x - "+complexText(-a,-shownImag),
+      "x - "+complexText(a,shownImag),
+      "x - "+complexText(a+1,-shownImag),
+      "x - "+complexText(a-1,-shownImag)
+    ];
+  }else{
+    distractors=[
+      complexText(-a,shownImag),
+      complexText(-a,-shownImag),
+      complexText(a,shownImag),
+      complexText(a+1,-shownImag),
+      complexText(a-1,-shownImag)
+    ];
+  }
 
   var unique=[];
   distractors.forEach(function(v){
@@ -113,7 +125,7 @@ function makeProblem(){
   while(unique.length<3){
     var aa=randInt(-9,9);
     var bb=pick([1,2,3,4,5,6,7,8,9]);
-    var candidate=complexText(aa,pick([bb,-bb]));
+    var candidate=factorMode ? "x - "+complexText(aa,pick([bb,-bb])) : complexText(aa,pick([bb,-bb]));
     if(candidate!==answer && unique.indexOf(candidate)===-1) unique.push(candidate);
   }
 
@@ -140,7 +152,7 @@ function renderChoices(p){
 function newProblem(){
   currentProblem=makeProblem();
   answered=false;
-  document.getElementById("promptText").textContent=currentProblem.prompt;
+  document.getElementById("promptText").innerHTML=currentProblem.prompt;
   document.getElementById("feedback").textContent="";
   document.getElementById("feedback").className="";
   document.getElementById("actionButton").textContent="Check Answer";
