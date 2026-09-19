@@ -131,8 +131,6 @@ function clearGraph(){ svg.innerHTML=""; }
 
 function drawBase(){
   svg.appendChild(el("line",{x1:axisLeft,y1:axisY,x2:axisRight,y2:axisY,stroke:"#111","stroke-width":3}));
-  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+12},${axisY-7} ${axisLeft+12},${axisY+7}`,fill:"#111"}));
-  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-12},${axisY-7} ${axisRight-12},${axisY+7}`,fill:"#111"}));
 }
 
 function drawLabel(x,text){
@@ -149,12 +147,16 @@ function drawSegment(x1,x2){
   svg.appendChild(el("line",{x1:x1,y1:axisY,x2:x2,y2:axisY,stroke:"#111","stroke-width":10,"stroke-linecap":"butt"}));
 }
 
-function drawLeftRayArrow(){
-  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${axisLeft+14},${axisY-6} ${axisLeft+14},${axisY+6}`,fill:"#111"}));
+function drawLeftRay(toX){
+  const baseX = axisLeft + 16;
+  drawSegment(baseX,toX);
+  svg.appendChild(el("polygon",{points:`${axisLeft},${axisY} ${baseX},${axisY-7} ${baseX},${axisY+7}`,fill:"#111"}));
 }
 
-function drawRightRayArrow(){
-  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${axisRight-14},${axisY-6} ${axisRight-14},${axisY+6}`,fill:"#111"}));
+function drawRightRay(fromX){
+  const baseX = axisRight - 16;
+  drawSegment(fromX,baseX);
+  svg.appendChild(el("polygon",{points:`${axisRight},${axisY} ${baseX},${axisY-7} ${baseX},${axisY+7}`,fill:"#111"}));
 }
 
 function shuffle(arr){
@@ -249,8 +251,7 @@ function drawProblem(p){
   drawBase();
 
   if(p.type==="left"){
-    drawSegment(axisLeft,xA);
-    drawLeftRayArrow();
+    drawLeftRay(xA);
     drawSegment(xB,xC);
     drawEndpoint(xA,p.aClosed);
     drawEndpoint(xB,p.bClosed);
@@ -261,8 +262,7 @@ function drawProblem(p){
   }
   else if(p.type==="right"){
     drawSegment(xA,xB);
-    drawSegment(xC,axisRight);
-    drawRightRayArrow();
+    drawRightRay(xC);
     drawEndpoint(xA,true);
     drawEndpoint(xB,p.bClosed);
     drawEndpoint(xC,p.cClosed);
@@ -271,10 +271,8 @@ function drawProblem(p){
     drawLabel(xC,p.c);
   }
   else {
-    drawSegment(axisLeft,xA);
-    drawLeftRayArrow();
-    drawSegment(xC,axisRight);
-    drawRightRayArrow();
+    drawLeftRay(xA);
+    drawRightRay(xC);
     drawEndpoint(xA,p.aClosed);
     drawEndpoint(xC,p.bClosed);
     drawLabel(xA,p.a);
