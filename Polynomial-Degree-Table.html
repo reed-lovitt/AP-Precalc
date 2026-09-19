@@ -7,6 +7,13 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}.page{max-width:900px;margin:28px auto;padding:0 18px}h1{margin:0 0 8px;font-size:30px}.subtitle{font-size:17px;color:#444;margin-bottom:18px}.topbar{display:flex;justify-content:flex-end;margin-bottom:18px}.problem-box{border:1.5px solid #111;padding:22px}.question{font-size:20px;font-weight:700;margin-bottom:12px}.table-wrap{display:flex;justify-content:center;margin:16px 0 22px;overflow-x:auto}table{border-collapse:collapse;font-size:21px;min-width:420px;text-align:center}th,td{border:1.5px solid #111;padding:11px 18px;min-width:76px}th{font-weight:700;background:#fafafa}.choices{display:grid;grid-template-columns:1fr;gap:10px}.choice{border:1.5px solid #111;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff}.choice:hover{background:#f2f2f2}.choice input{transform:scale(1.15);margin:0}.choice-letter{font-weight:700;min-width:24px}.choice-text{font-size:20px}.button-row{margin-top:18px}button{font-size:17px;padding:11px 18px;border:1.5px solid #111;background:#fff;cursor:pointer}button:hover{background:#ededed}#feedback{min-height:30px;margin-top:16px;font-size:19px;font-weight:700}.correct{color:#16752b}.incorrect{color:#b52222}@media(max-width:650px){.page{padding:0 12px;margin-top:18px}.problem-box{padding:16px}h1{font-size:27px}th,td{padding:9px 12px;min-width:62px}}
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -28,6 +35,11 @@
 </div>
 <script>
 (function(){
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise(target ? [target] : undefined);
+  }
+}
 "use strict";
 var currentProblem=null,answered=false,correctCount=0,attemptCount=0;
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
@@ -58,11 +70,12 @@ function makeProblem(){
 function renderTable(p){
   var h="";
   if(p.orientation==="horizontal"){
-    h="<table><tr><th>x</th>";p.xs.forEach(function(x){h+="<td>"+x+"</td>"});h+="</tr><tr><th>f(x)</th>";p.ys.forEach(function(y){h+="<td>"+y+"</td>"});h+="</tr></table>";
+    h="<table><tr><th>\\(x\\)</th>";p.xs.forEach(function(x){h+="<td>"+x+"</td>"});h+="</tr><tr><th>\\(f(x)\\)</th>";p.ys.forEach(function(y){h+="<td>"+y+"</td>"});h+="</tr></table>";
   }else{
-    h="<table><tr><th>x</th><th>f(x)</th></tr>";for(var i=0;i<p.xs.length;i++)h+="<tr><td>"+p.xs[i]+"</td><td>"+p.ys[i]+"</td></tr>";h+="</table>";
+    h="<table><tr><th>\\(x\\)</th><th>\\(f(x)\\)</th></tr>";for(var i=0;i<p.xs.length;i++)h+="<tr><td>"+p.xs[i]+"</td><td>"+p.ys[i]+"</td></tr>";h+="</table>";
   }
   document.getElementById("tableWrap").innerHTML=h;
+  typesetMath(document.getElementById("tableWrap"));
 }
 function renderChoices(p){
   var r=document.querySelectorAll('input[name="choice"]');
