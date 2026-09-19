@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimum Polynomial Degree Practice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+.page{max-width:900px;margin:28px auto;padding:0 18px}
+h1{margin:0 0 8px;font-size:30px}
+.subtitle{font-size:17px;color:#444;margin-bottom:18px}
+.topbar{display:flex;justify-content:flex-end;margin-bottom:18px}
+.score{font-size:17px}
+.problem-box{border:1.5px solid #111;padding:22px}
+.question{font-size:21px;font-weight:700;line-height:1.45;margin-bottom:18px}
+.math{font-family:"Times New Roman",Times,serif;font-size:24px}
+.choices{display:grid;grid-template-columns:1fr;gap:10px}
+.choice{border:1.5px solid #111;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff}
+.choice:hover{background:#f2f2f2}
+.choice input{transform:scale(1.15);margin:0}
+.choice-letter{font-weight:700;min-width:24px}
+.choice-text{font-size:20px}
+.button-row{margin-top:18px}
+button{font-size:17px;padding:11px 18px;border:1.5px solid #111;background:#fff;cursor:pointer}
+button:hover{background:#ededed}
+#feedback{min-height:30px;margin-top:16px;font-size:19px;font-weight:700}
+.correct{color:#16752b}
+.incorrect{color:#b52222}
+@media(max-width:650px){
+  .page{padding:0 12px;margin-top:18px}
+  .problem-box{padding:16px}
+  h1{font-size:27px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Minimum Polynomial Degree Practice</h1>
+  <div class="subtitle">Use multiplicity and conjugate pairs to determine the minimum possible degree.</div>
+
+  <div class="topbar">
+    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+  </div>
+
+  <div class="problem-box">
+    <div class="question" id="promptText"></div>
+
+    <form class="choices">
+      <label class="choice"><input type="radio" name="choice" value="0"><span class="choice-letter">A.</span><span class="choice-text" id="choice0"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="1"><span class="choice-letter">B.</span><span class="choice-text" id="choice1"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="2"><span class="choice-letter">C.</span><span class="choice-text" id="choice2"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="3"><span class="choice-letter">D.</span><span class="choice-text" id="choice3"></span></label>
+    </form>
+
+    <div class="button-row"><button id="actionButton" type="button">Check Answer</button></div>
+    <div id="feedback"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var currentProblem=null;
+var answered=false;
+var correctCount=0;
+var attemptCount=0;
+
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function pick(arr){return arr[randInt(0,arr.length-1)];}
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function realFactor(r,m){
+  var core = r>=0 ? "(x - "+r+")" : "(x + "+Math.abs(r)+")";
+  return m>1 ? core+"<sup>"+m+"</sup>" : core;
+}
+function complexZero(a,b){
+  return a+(b<0?" - ":" + ")+Math.abs(b)+"i";
+}
+function uniqueReal(exclude){
+  var r;
+  do{r=randInt(-8,8);}while(exclude.indexOf(r)!==-1 || r===0);
+  return r;
+}
+
+function makeProblem(){
+  // Rough mix: 50% factor-heavy, 30% zero-heavy, 20% mixed.
+  var roll=Math.random();
+  var mode=roll<0.50 ? "factors" : (roll<0.80 ? "zeros" : "mixed");
+
+  var mult=pick([2,3,4]);
+  var r1=uniqueReal([]);
+  var r2=uniqueReal([r1]);
+  var r3=Math.random()<0.45 ? uniqueReal([r1,r2]) : null;
+
+  var a=randInt(-7,7);
+  var b=pick([1,2,3,4,5,6,7,8]);
+
+  var realCount=mult+1+(r3===null?0:1);
+  var correctDegree=realCount+2; // one stated nonreal zero + required conjugate
+
+  var prompt="A polynomial <span class='math'>p</span> has real coefficients. ";
+  if(mode==="factors"){
+    prompt+="The polynomial has factors <span class='math'>"+realFactor(r1,mult)+"</span>";
+    prompt+=", <span class='math'>"+realFactor(r2,1)+"</span>";
+    if(r3!==null) prompt+=", and <span class='math'>"+realFactor(r3,1)+"</span>";
+    prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero of <span class='math'>p</span>.";
+  }else if(mode==="zeros"){
+    prompt+="The number <span class='math'>"+r1+"</span> is a zero of multiplicity "+mult+", ";
+    prompt+="<span class='math'>"+r2+"</span> is a zero";
+    if(r3!==null) prompt+=", <span class='math'>"+r3+"</span> is a zero";
+    prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero.";
+  }else{
+    prompt+="The factor <span class='math'>"+realFactor(r1,mult)+"</span> occurs in the factorization of <span class='math'>p</span>, ";
+    prompt+="<span class='math'>"+r2+"</span> is a zero";
+    if(r3!==null) prompt+=", <span class='math'>"+realFactor(r3,1)+"</span> is also a factor";
+    prompt+=", and <span class='math'>"+complexZero(a,b)+"</span> is a zero.";
+  }
+  prompt+=" What is the minimum possible degree of <span class='math'>p</span>?";
+
+  var distractorSet=[];
+  function add(v){
+    if(v>0 && v!==correctDegree && distractorSet.indexOf(v)===-1) distractorSet.push(v);
+  }
+  add(realCount+1);           // forget the conjugate partner
+  add((1+1+(r3===null?0:1))+2); // ignore repeated multiplicity
+  add(realCount);             // forget complex pair entirely
+  add(correctDegree+1);
+  add(correctDegree-1);
+
+  while(distractorSet.length<3){
+    add(correctDegree+pick([-3,-2,2,3]));
+  }
+
+  var choices=shuffle([
+    {text:String(correctDegree),correct:true},
+    {text:String(distractorSet[0]),correct:false},
+    {text:String(distractorSet[1]),correct:false},
+    {text:String(distractorSet[2]),correct:false}
+  ]);
+
+  return {prompt:prompt,choices:choices};
+}
+
+function renderChoices(p){
+  var radios=document.querySelectorAll('input[name="choice"]');
+  p.choices.forEach(function(c,i){
+    document.getElementById("choice"+i).textContent=c.text;
+    radios[i].checked=false;
+    radios[i].dataset.correct=c.correct?"true":"false";
+  });
+}
+
+function newProblem(){
+  currentProblem=makeProblem();
+  answered=false;
+  document.getElementById("promptText").innerHTML=currentProblem.prompt;
+  document.getElementById("feedback").textContent="";
+  document.getElementById("feedback").className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  renderChoices(currentProblem);
+}
+
+function checkAnswer(){
+  if(answered)return;
+  var selected=document.querySelector('input[name="choice"]:checked');
+  var feedback=document.getElementById("feedback");
+
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+
+  answered=true;
+  attemptCount++;
+
+  if(selected.dataset.correct==="true"){
+    correctCount++;
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  }else{
+    feedback.textContent="Not quite.";
+    feedback.className="incorrect";
+  }
+
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("attemptCount").textContent=attemptCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",function(){
+  answered?newProblem():checkAnswer();
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"){
+    e.preventDefault();
+    answered?newProblem():checkAnswer();
+  }
+});
+
+newProblem();
+})();
+</script>
+</body>
+</html>
