@@ -172,6 +172,13 @@
     }
   }
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -246,18 +253,10 @@ function distinctInts(count, min, max) {
 }
 
 function subtractText(first, second) {
-  return second < 0
-    ? `${first}- (${second})`
-    : `${first}- ${second}`;
+  return second < 0 ? first+"-("+second+")" : first+"-"+second;
 }
-
 function fractionHTML(num1, num2, den1, den2) {
-  return `
-    <span class="frac">
-      <span class="num">${subtractText(num1, num2)}</span>
-      <span class="den">${subtractText(den1, den2)}</span>
-    </span>
-  `;
+  return "\\(\\frac{"+subtractText(num1,num2)+"}{"+subtractText(den1,den2)+"}\\)";
 }
 
 function makeData() {
@@ -318,18 +317,18 @@ function renderTable(problem) {
   const wrap = document.getElementById("tableWrap");
 
   if (problem.orientation === "horizontal") {
-    let html = '<table class="data-table"><tr><th>x</th>';
+    let html = '<table class="data-table"><tr><th>\\(x\\)</th>';
     problem.xs.forEach(x => {
       html += `<td>${x}</td>`;
     });
-    html += '</tr><tr><th>f(x)</th>';
+    html += '</tr><tr><th>\\(f(x)\\)</th>';
     problem.ys.forEach(y => {
       html += `<td>${y}</td>`;
     });
     html += '</tr></table>';
     wrap.innerHTML = html;
   } else {
-    let html = '<table class="data-table"><tr><th>x</th><th>f(x)</th></tr>';
+    let html = '<table class="data-table"><tr><th>\\(x\\)</th><th>\\(f(x)\\)</th></tr>';
     for (let i = 0; i < problem.xs.length; i++) {
       html += `<tr><td>${problem.xs[i]}</td><td>${problem.ys[i]}</td></tr>`;
     }
@@ -349,6 +348,7 @@ function renderChoices(problem) {
     radios[i].disabled = false;
     radios[i].dataset.correct = choice.correct ? "true" : "false";
   });
+  typesetMath(document.querySelector(".problem-box"));
 }
 
 function newProblem() {
@@ -361,8 +361,8 @@ function newProblem() {
 
   const left = Math.min(currentProblem.a, currentProblem.b);
   const right = Math.max(currentProblem.a, currentProblem.b);
-  document.getElementById("promptText").textContent =
-    `Find the average rate of change on [${left}, ${right}].`;
+  document.getElementById("promptText").innerHTML =
+    "Find the average rate of change on \\(["+left+", "+right+"]\\).";
 
   renderTable(currentProblem);
   renderChoices(currentProblem);
