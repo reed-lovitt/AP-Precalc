@@ -139,10 +139,10 @@ const svg = document.getElementById("graph");
 
 const W = 800;
 const H = 380;
-const left = 70;
-const right = 760;
-const top = 25;
-const bottom = 330;
+const graphLeft = 70;
+const graphRight = 760;
+const graphTop = 25;
+const graphBottom = 330;
 const xMin = -6;
 const xMax = 6;
 const yMin = -6;
@@ -168,11 +168,11 @@ function el(type, attrs={}){
 }
 
 function xPx(x){
-  return left + (x-xMin)*(right-left)/(xMax-xMin);
+  return graphLeft + (x-xMin)*(graphRight-graphLeft)/(xMax-xMin);
 }
 
 function yPx(y){
-  return bottom - (y-yMin)*(bottom-top)/(yMax-yMin);
+  return graphBottom - (y-yMin)*(graphBottom-graphTop)/(yMax-yMin);
 }
 
 function subtractText(first, second){
@@ -228,7 +228,7 @@ function drawGraph(p){
   for(let x=xMin;x<=xMax;x++){
     const px=xPx(x);
     svg.appendChild(el("line",{
-      x1:px,y1:top,x2:px,y2:bottom,
+      x1:px,y1:graphTop,x2:px,y2:graphBottom,
       stroke:x===0?"#111":"#ddd",
       "stroke-width":x===0?2:1
     }));
@@ -236,7 +236,7 @@ function drawGraph(p){
   for(let y=yMin;y<=yMax;y++){
     const py=yPx(y);
     svg.appendChild(el("line",{
-      x1:left,y1:py,x2:right,y2:py,
+      x1:graphLeft,y1:py,x2:graphRight,y2:py,
       stroke:y===0?"#111":"#ddd",
       "stroke-width":y===0?2:1
     }));
