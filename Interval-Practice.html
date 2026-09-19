@@ -39,6 +39,13 @@
     #graph{height:145px}
   }
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -280,14 +287,18 @@ function drawProblem(p){
   }
 }
 
+function intervalMath(s){
+  return "\\("+s.replace(/∞/g,"\\\\infty").replace(/∪/g,"\\\\cup")+"\\)";
+}
 function renderChoices(p){
   const radios=document.querySelectorAll('input[name="choice"]');
   p.choices.forEach((choice,i)=>{
-    document.getElementById(`choiceText${i}`).textContent=choice.text;
+    document.getElementById(`choiceText${i}`).innerHTML=intervalMath(choice.text);
     radios[i].checked=false;
     radios[i].disabled=false;
     radios[i].dataset.correct=choice.correct?"true":"false";
   });
+  typesetMath(document.querySelector(".problem-box"));
 }
 
 function newProblem(){
