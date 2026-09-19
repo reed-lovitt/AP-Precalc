@@ -131,41 +131,62 @@ button:hover{background:#ededed}
       '</span></span>';
   }
 
+  function choiceKey(choice){
+    return subtraction(choice.n1,choice.n2) + "/" +
+           subtraction(choice.d1,choice.d2);
+  }
+
   function generateProblem(){
     var xs=[-5,-3,-1,1,3,5];
-    var ys=[];
 
-    while(ys.length<xs.length){
-      var y=randInt(-5,5);
-      if(ys.indexOf(y)===-1) ys.push(y);
+    while(true){
+      var ys=[];
+
+      while(ys.length<xs.length){
+        var y=randInt(-5,5);
+        if(ys.indexOf(y)===-1) ys.push(y);
+      }
+
+      var i1,i2,leftIndex,rightIndex,a,b,fA,fB;
+
+      do{
+        i1=randInt(0,xs.length-1);
+        i2=randInt(0,xs.length-1);
+
+        leftIndex=Math.min(i1,i2);
+        rightIndex=Math.max(i1,i2);
+
+        a=xs[leftIndex];
+        b=xs[rightIndex];
+        fA=ys[leftIndex];
+        fB=ys[rightIndex];
+      }while(
+        i1===i2 ||
+        Math.abs(i1-i2)<2 ||
+        fA===a ||
+        fB===b
+      );
+
+      var choices=[
+        {n1:fA,n2:fB,d1:a,d2:b,correct:true},
+        {n1:a,n2:b,d1:fA,d2:fB,correct:false},
+        {n1:fA,n2:fB,d1:b,d2:a,correct:false},
+        {n1:a,n2:fA,d1:b,d2:fB,correct:false}
+      ];
+
+      var keys=choices.map(choiceKey);
+      var uniqueKeys=keys.filter(function(key,index){
+        return keys.indexOf(key)===index;
+      });
+
+      if(uniqueKeys.length===4){
+        return {
+          xs:xs, ys:ys, a:a, b:b, fA:fA, fB:fB,
+          leftIndex:leftIndex, rightIndex:rightIndex,
+          choices:shuffle(choices)
+        };
+      }
     }
-
-    var i1,i2;
-    do{
-      i1=randInt(0,xs.length-1);
-      i2=randInt(0,xs.length-1);
-    }while(i1===i2 || Math.abs(i1-i2)<2);
-
-    var leftIndex=Math.min(i1,i2);
-    var rightIndex=Math.max(i1,i2);
-
-    var a=xs[leftIndex];
-    var b=xs[rightIndex];
-    var fA=ys[leftIndex];
-    var fB=ys[rightIndex];
-
-    var choices=[
-      {n1:fA,n2:fB,d1:a,d2:b,correct:true},
-      {n1:a,n2:b,d1:fA,d2:fB,correct:false},
-      {n1:fA,n2:fB,d1:b,d2:a,correct:false},
-      {n1:a,n2:fA,d1:b,d2:fB,correct:false}
-    ];
-
-    return {
-      xs:xs, ys:ys, a:a, b:b, fA:fA, fB:fB,
-      leftIndex:leftIndex, rightIndex:rightIndex,
-      choices:shuffle(choices)
-    };
   }
 
   function addText(x,y,text,attrs){
