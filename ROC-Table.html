@@ -176,23 +176,14 @@
 <body>
 <div class="page">
   <h1>Rate of Change from a Table</h1>
-  <div class="subtitle">Use the table to substitute into the expression. Do not simplify.</div>
+  <div class="subtitle">Choose the correct setup from the table. Do not simplify.</div>
 
   <div class="topbar">
     <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
   </div>
 
   <div class="problem-box">
-    <div class="question">Use the table to evaluate the setup for</div>
-
-    <div class="formula-line">
-      <span class="frac">
-        <span class="num">f(a) - f(b)</span>
-        <span class="den">a - b</span>
-      </span>
-    </div>
-
-    <div class="prompt" id="promptText"></div>
+    <div class="question" id="promptText"></div>
 
     <div class="table-wrap" id="tableWrap"></div>
 
@@ -296,11 +287,18 @@ function makeData() {
   const fA = ys[iA];
   const fB = ys[iB];
 
-  const combos = [
-    { first: fA, second: fB, correct: true },
-    { first: a,  second: fB, correct: false },
-    { first: fA, second: b,  correct: false },
-    { first: a,  second: b,  correct: false }
+  const choices = [
+    // correct: (f(a)-f(b)) / (a-b)
+    { n1: fA, n2: fB, d1: a,  d2: b,  correct: true },
+
+    // flip numerator and denominator
+    { n1: a,  n2: b,  d1: fA, d2: fB, correct: false },
+
+    // reverse only the denominator
+    { n1: fA, n2: fB, d1: b,  d2: a,  correct: false },
+
+    // subtract within each point: (a-f(a)) / (b-f(b))
+    { n1: a,  n2: fA, d1: b,  d2: fB, correct: false }
   ];
 
   return {
@@ -311,7 +309,7 @@ function makeData() {
     fA,
     fB,
     orientation: Math.random() < 0.5 ? "horizontal" : "vertical",
-    choices: shuffle(combos)
+    choices: shuffle(choices)
   };
 }
 
@@ -344,7 +342,7 @@ function renderChoices(problem) {
 
   problem.choices.forEach((choice, i) => {
     document.getElementById(`choice${i}`).innerHTML =
-      fractionHTML(choice.first, choice.second, problem.a, problem.b);
+      fractionHTML(choice.n1, choice.n2, choice.d1, choice.d2);
 
     radios[i].checked = false;
     radios[i].disabled = false;
@@ -360,8 +358,10 @@ function newProblem() {
   document.getElementById("feedback").className = "";
   document.getElementById("actionButton").textContent = "Check Answer";
 
-  document.getElementById("promptText").innerHTML =
-    `where <strong>a = ${currentProblem.a}</strong> and <strong>b = ${currentProblem.b}</strong>.`;
+  const left = Math.min(currentProblem.a, currentProblem.b);
+  const right = Math.max(currentProblem.a, currentProblem.b);
+  document.getElementById("promptText").textContent =
+    `Find the average rate of change on [${left}, ${right}].`;
 
   renderTable(currentProblem);
   renderChoices(currentProblem);
