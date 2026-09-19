@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex Conjugate Zeros Practice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+.page{max-width:900px;margin:28px auto;padding:0 18px}
+h1{margin:0 0 8px;font-size:30px}
+.subtitle{font-size:17px;color:#444;margin-bottom:18px}
+.topbar{display:flex;justify-content:flex-end;margin-bottom:18px}
+.score{font-size:17px}
+.problem-box{border:1.5px solid #111;padding:22px}
+.question{font-size:21px;font-weight:700;margin-bottom:18px;line-height:1.4}
+.choices{display:grid;grid-template-columns:1fr;gap:10px}
+.choice{border:1.5px solid #111;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff}
+.choice:hover{background:#f2f2f2}
+.choice input{transform:scale(1.15);margin:0}
+.choice-letter{font-weight:700;min-width:24px}
+.choice-text{font-family:"Times New Roman",Times,serif;font-size:24px}
+.button-row{margin-top:18px}
+button{font-size:17px;padding:11px 18px;border:1.5px solid #111;background:#fff;cursor:pointer}
+button:hover{background:#ededed}
+#feedback{min-height:30px;margin-top:16px;font-size:19px;font-weight:700}
+.correct{color:#16752b}
+.incorrect{color:#b52222}
+@media(max-width:650px){
+  .page{padding:0 12px;margin-top:18px}
+  .problem-box{padding:16px}
+  h1{font-size:27px}
+  .choice-text{font-size:21px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Complex Conjugate Zeros Practice</h1>
+  <div class="subtitle">Use the conjugate pair theorem for polynomials with real coefficients.</div>
+
+  <div class="topbar">
+    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+  </div>
+
+  <div class="problem-box">
+    <div class="question" id="promptText"></div>
+
+    <form class="choices">
+      <label class="choice"><input type="radio" name="choice" value="0"><span class="choice-letter">A.</span><span class="choice-text" id="choice0"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="1"><span class="choice-letter">B.</span><span class="choice-text" id="choice1"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="2"><span class="choice-letter">C.</span><span class="choice-text" id="choice2"></span></label>
+      <label class="choice"><input type="radio" name="choice" value="3"><span class="choice-letter">D.</span><span class="choice-text" id="choice3"></span></label>
+    </form>
+
+    <div class="button-row"><button id="actionButton" type="button">Check Answer</button></div>
+    <div id="feedback"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var currentProblem=null;
+var answered=false;
+var correctCount=0;
+var attemptCount=0;
+
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function pick(arr){return arr[randInt(0,arr.length-1)];}
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function complexText(a,b){
+  return String(a)+(b<0?" - ":" + ")+Math.abs(b)+"i";
+}
+
+function makeProblem(){
+  var a=randInt(-9,9);
+  var b=pick([1,2,3,4,5,6,7,8,9]);
+  var shownImag=Math.random()<0.5 ? b : -b;
+  var answer=complexText(a,-shownImag);
+
+  // 90% zero wording, 10% factor wording.
+  var factorMode=Math.random()<0.10;
+
+  var prompt;
+  if(factorMode){
+    prompt="If x - ("+complexText(a,shownImag)+") is a factor of a polynomial with real coefficients, which number must also be a zero?";
+  }else{
+    prompt="If "+complexText(a,shownImag)+" is a zero of a polynomial with real coefficients, which number must also be a zero?";
+  }
+
+  var distractors=[
+    complexText(-a,shownImag),
+    complexText(-a,-shownImag),
+    complexText(a,shownImag),
+    complexText(a+1,-shownImag),
+    complexText(a-1,-shownImag)
+  ];
+
+  var unique=[];
+  distractors.forEach(function(v){
+    if(v!==answer && unique.indexOf(v)===-1) unique.push(v);
+  });
+
+  while(unique.length<3){
+    var aa=randInt(-9,9);
+    var bb=pick([1,2,3,4,5,6,7,8,9]);
+    var candidate=complexText(aa,pick([bb,-bb]));
+    if(candidate!==answer && unique.indexOf(candidate)===-1) unique.push(candidate);
+  }
+
+  return {
+    prompt:prompt,
+    choices:shuffle([
+      {text:answer,correct:true},
+      {text:unique[0],correct:false},
+      {text:unique[1],correct:false},
+      {text:unique[2],correct:false}
+    ])
+  };
+}
+
+function renderChoices(p){
+  var radios=document.querySelectorAll('input[name="choice"]');
+  p.choices.forEach(function(c,i){
+    document.getElementById("choice"+i).textContent=c.text;
+    radios[i].checked=false;
+    radios[i].dataset.correct=c.correct?"true":"false";
+  });
+}
+
+function newProblem(){
+  currentProblem=makeProblem();
+  answered=false;
+  document.getElementById("promptText").textContent=currentProblem.prompt;
+  document.getElementById("feedback").textContent="";
+  document.getElementById("feedback").className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  renderChoices(currentProblem);
+}
+
+function checkAnswer(){
+  if(answered)return;
+
+  var selected=document.querySelector('input[name="choice"]:checked');
+  var feedback=document.getElementById("feedback");
+
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+
+  answered=true;
+  attemptCount++;
+
+  if(selected.dataset.correct==="true"){
+    correctCount++;
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  }else{
+    feedback.textContent="Not quite.";
+    feedback.className="incorrect";
+  }
+
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("attemptCount").textContent=attemptCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",function(){
+  answered?newProblem():checkAnswer();
+});
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"){
+    e.preventDefault();
+    answered?newProblem():checkAnswer();
+  }
+});
+
+newProblem();
+})();
+</script>
+</body>
+</html>
