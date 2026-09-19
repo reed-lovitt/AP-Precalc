@@ -36,6 +36,13 @@ button:hover{background:#ededed}
   #graph{height:330px}
 }
 </style>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
 <div class="page">
@@ -66,6 +73,11 @@ button:hover{background:#ededed}
 
 <script>
 (function(){
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise(target ? [target] : undefined);
+  }
+}
 "use strict";
 
 var svg=document.getElementById("graph");
@@ -333,10 +345,11 @@ function newProblem(){
   actionButton.textContent="Check Answer";
 
   functionType.innerHTML='The function <i>f</i> is an <b>'+currentProblem.type+'</b> function.';
-  promptText.innerHTML='Find <i>f</i>('+currentProblem.askX+').';
+  promptText.innerHTML='Find \\(f('+currentProblem.askX+')\\).';
 
   drawProblem(currentProblem);
   renderChoices(currentProblem);
+  typesetMath(document.querySelector(".problem-box"));
 }
 
 function checkAnswer(){
