@@ -226,6 +226,11 @@ window.MathJax = {
 </div>
 
 <script>
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise(target ? [target] : undefined);
+  }
+}
 let currentProblem = null;
 let answered = false;
 let correctCount = 0;
