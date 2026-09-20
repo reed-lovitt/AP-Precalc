@@ -111,8 +111,9 @@ function makeProblem(){
   var R=pick(rightOptions);
 
   var levelMag=pick([2,3]);
-  var leftBase=pick([-1,1])*levelMag;
-  var rightBase=-leftBase;
+  var baseSign=pick([-1,1]);
+  var leftBase=baseSign*levelMag;
+  var rightBase=baseSign*levelMag;
 
   // Exactly one semicircle is concave down (upper) and the other concave up (lower).
   var leftUpper=Math.random()<0.5;
