@@ -94,12 +94,29 @@ function nextConcept(){
 }
 
 function makeProblem(){
-  var template=pick(["SLSL","LSLS"]);
-  var middleLevel=pick([-3,3]);
-  var semicircleOrder=pick(["upperLower","lowerUpper"]);
+  // Fixed overall window, but varied semicircle placement/diameter.
+  // Each side has one semicircle whose inner endpoint connects to the origin.
+  // The two semicircle baselines always have opposite nonzero signs, which
+  // forces one connecting line to have positive slope and the other negative.
+  var leftOptions=[
+    {a:-10,b:-6},{a:-9,b:-5},{a:-8,b:-4},{a:-7,b:-3},
+    {a:-10,b:-4},{a:-9,b:-3}
+  ];
+  var rightOptions=[
+    {a:3,b:7},{a:4,b:8},{a:5,b:9},{a:6,b:10},
+    {a:3,b:9},{a:4,b:10}
+  ];
 
-  var xs=[-8,-4,0,4,8];
-  var pieces=[];
+  var L=pick(leftOptions);
+  var R=pick(rightOptions);
+
+  var levelMag=pick([2,3]);
+  var leftBase=pick([-1,1])*levelMag;
+  var rightBase=-leftBase;
+
+  // Exactly one semicircle is concave down (upper) and the other concave up (lower).
+  var leftUpper=Math.random()<0.5;
+  var rightUpper=!leftUpper;
 
   function semi(a,b,base,upper){
     return {type:"semi",a:a,b:b,base:base,upper:upper};
@@ -108,25 +125,14 @@ function makeProblem(){
     return {type:"line",a:a,b:b,y1:y1,y2:y2,slope:(y2-y1)/(b-a)};
   }
 
-  if(template==="SLSL"){
-    var firstUpper=semicircleOrder==="upperLower";
-    var secondUpper=!firstUpper;
-    pieces=[
-      semi(-8,-4,0,firstUpper),
-      line(-4,0,0,middleLevel),
-      semi(0,4,middleLevel,secondUpper),
-      line(4,8,middleLevel,0)
-    ];
-  }else{
-    var firstUpper2=semicircleOrder==="upperLower";
-    var secondUpper2=!firstUpper2;
-    pieces=[
-      line(-8,-4,0,middleLevel),
-      semi(-4,0,middleLevel,firstUpper2),
-      line(0,4,middleLevel,0),
-      semi(4,8,0,secondUpper2)
-    ];
-  }
+  // Structure is always:
+  // left semicircle -> line to (0,0) -> line from (0,0) -> right semicircle.
+  var pieces=[
+    semi(L.a,L.b,leftBase,leftUpper),
+    line(L.b,0,leftBase,0),
+    line(0,R.a,0,rightBase),
+    semi(R.a,R.b,rightBase,rightUpper)
+  ];
 
   var answersByConcept={};
   pieces.forEach(function(p){
@@ -158,24 +164,31 @@ function makeProblem(){
   var correct=answersByConcept[concept];
   var allIntervals=pieces.map(function(p){return interval(p.a,p.b)});
   var distractors=shuffle(allIntervals.filter(function(x){return x!==correct})).slice(0,3);
-  var answers=shuffle([correct].concat(distractors)).map(function(x){return {text:x,correct:x===correct}});
+  var answers=shuffle([correct].concat(distractors)).map(function(x){
+    return {text:x,correct:x===correct};
+  });
 
-  return {pieces:pieces,concept:concept,prompt:"The graph of the function \\(f\\) is shown. Over which of the following intervals "+wording+"?",answers:answers};
+  return {
+    pieces:pieces,
+    concept:concept,
+    prompt:"The graph of the function \\(f\\) is shown. Over which of the following intervals "+wording+"?",
+    answers:answers
+  };
 }
 
 function graphSVG(prob){
   var W=600,H=390,pL=54,pR=24,pT=20,pB=42;
-  var xmin=-9,xmax=9,ymin=-6,ymax=6;
+  var xmin=-11,xmax=11,ymin=-7,ymax=7;
   function sx(x){return pL+(x-xmin)*(W-pL-pR)/(xmax-xmin)}
   function sy(y){return H-pB-(y-ymin)*(H-pT-pB)/(ymax-ymin)}
 
   var grid="",labels="";
-  for(var gx=-8;gx<=8;gx++){
+  for(var gx=-10;gx<=10;gx++){
     var X=sx(gx);
     grid+="<line x1='"+X+"' y1='"+pT+"' x2='"+X+"' y2='"+(H-pB)+"' stroke='#d0d0d0' stroke-width='0.8'/>";
     if(gx!==0) labels+="<text x='"+X+"' y='"+(sy(0)+18)+"' text-anchor='middle' font-size='12' font-family='Times New Roman'>"+gx+"</text>";
   }
-  for(var gy=-5;gy<=5;gy++){
+  for(var gy=-6;gy<=6;gy++){
     var Y=sy(gy);
     grid+="<line x1='"+pL+"' y1='"+Y+"' x2='"+(W-pR)+"' y2='"+Y+"' stroke='#d0d0d0' stroke-width='0.8'/>";
     if(gy!==0) labels+="<text x='"+(sx(0)-7)+"' y='"+(Y+4)+"' text-anchor='end' font-size='12' font-family='Times New Roman'>"+gy+"</text>";
