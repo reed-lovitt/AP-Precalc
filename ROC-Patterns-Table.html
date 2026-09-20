@@ -56,6 +56,12 @@ button:hover{background:#ededed}
 }
 mjx-container{margin:0 !important}
 
+
+.math-head{
+  font-family:"Cambria Math","Times New Roman",serif;
+  font-weight:400;
+  font-size:1.05em;
+}
 </style>
 <script>
 window.MathJax={tex:{inlineMath:[['\\(','\\)']]},chtml:{scale:1}};
@@ -239,13 +245,13 @@ function renderTable(p){
   var html="";
 
   if(p.orientation==="horizontal"){
-    html='<table><tr><th>\\(x\\)</th>';
+    html='<table><tr><th><span class='math-head'><i>x</i></span></th>';
     p.xs.forEach(function(x){html+='<td>'+x+'</td>';});
-    html+='</tr><tr><th>\\(f(x)\\)</th>';
+    html+='</tr><tr><th><span class='math-head'><i>f</i>(<i>x</i>)</span></th>';
     p.ys.forEach(function(y){html+='<td>'+y+'</td>';});
     html+='</tr></table>';
   }else{
-    html='<table><tr><th>\\(x\\)</th><th>\\(f(x)\\)</th></tr>';
+    html='<table><tr><th><span class='math-head'><i>x</i></span></th><th><span class='math-head'><i>f</i>(<i>x</i>)</span></th></tr>';
     for(var i=0;i<p.xs.length;i++){
       html+='<tr><td>'+p.xs[i]+'</td><td>'+p.ys[i]+'</td></tr>';
     }
