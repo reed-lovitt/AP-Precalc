@@ -124,9 +124,8 @@ function newProblem(){
 function checkAnswer(){
   if(answered)return;var s=document.querySelector('input[name="choice"]:checked'),f=document.getElementById("feedback");
   if(!s){f.textContent="Select an answer choice first.";f.className="incorrect";return}
-  answered=true;attemptCount++;
-  if(s.dataset.correct==="true"){correctCount++;f.textContent="Correct!";f.className="correct"}else{f.textContent="Not quite.";f.className="incorrect"}
-  document.getElementById("correctCount").textContent=correctCount;document.getElementById("attemptCount").textContent=attemptCount;document.getElementById("actionButton").textContent="New Question";
+  answered=true;if(s.dataset.correct==="true"){correctCount++;f.textContent="Correct!";f.className="correct"}else{f.textContent="Not quite.";f.className="incorrect"}
+  document.getElementById("correctCount").textContent=correctCount;document.getElementById("actionButton").textContent="New Question";
 }
 document.getElementById("actionButton").addEventListener("click",function(){answered?newProblem():checkAnswer()});
 newProblem();
