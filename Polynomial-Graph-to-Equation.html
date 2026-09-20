@@ -39,6 +39,8 @@ h1{
   font-size:16px;
   color:var(--muted);
 }
+.right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444;text-align:right;line-height:1.15}
 .score{
   font-size:17px;
   white-space:nowrap;
@@ -195,7 +197,10 @@ window.MathJax = {
       <h1>Polynomial Graph to Equation Practice</h1>
       <div class="subtitle">Use zeros, multiplicity, and end behavior to match a polynomial to its graph.</div>
     </div>
-    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+    <div class="right-status">
+      <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+      <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+    </div>
   </div>
 
   <div class="card">
@@ -225,6 +230,16 @@ window.MathJax = {
 var answered=false;
 var correctCount=0;
 var attemptCount=0;
+function updateClock(){
+  var now=new Date();
+  document.getElementById("dateDisplay").textContent=(now.getMonth()+1)+"/"+now.getDate();
+  document.getElementById("timeDisplay").textContent=now.toLocaleTimeString(undefined,{
+    hour:"numeric",minute:"2-digit",second:"2-digit"
+  });
+}
+updateClock();
+setInterval(updateClock,1000);
+
 var current=null;
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
