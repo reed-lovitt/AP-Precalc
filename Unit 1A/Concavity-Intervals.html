@@ -133,32 +133,41 @@ function unionTex(a,b,c,d){
 // The inflection point is EXACTLY h=(p+q)/2, so the answer is analytic,
 // not estimated from sampled pixels.
 function makeProblem(){
+  // Build the same reliable cubic in a base coordinate system, then apply
+  // a horizontal scale and shift. This changes the interval values and
+  // moves the y-axis without changing the underlying concavity logic.
   var pairs=[[-6,-2],[-5,-1],[-4,0],[-3,1],[-2,2],[-6,0],[-4,2]];
   var pq=pick(pairs);
-  var p=pq[0], q=pq[1];
-  var h=(p+q)/2;
+  var p0=pq[0], q0=pq[1];
+
+  var xScale=pick([1,2,3]);
+  // This is where x=0 lands in the BASE viewing window [-8,4].
+  // Different choices move the visible y-axis left/right.
+  var axisBase=pick([-7,-5,-3,-1,1,3]);
+  var xShift=-xScale*axisBase;
+
+  function tx(u){return xShift+xScale*u;}
+
+  var p=tx(p0), q=tx(q0);
+  var h=tx((p0+q0)/2);
   var k=pick([1,-1]);
   var askDown=Math.random()<0.5;
 
-  function raw(x){
-    return k*(x*x*x/3 - (p+q)*x*x/2 + p*q*x);
+  function rawBase(u){
+    return k*(u*u*u/3 - (p0+q0)*u*u/2 + p0*q0*u);
   }
 
-  // Center vertically around the midpoint of the two turning values.
-  var fp=raw(p), fq=raw(q);
+  var fp=rawBase(p0), fq=rawBase(q0);
   var center=(fp+fq)/2;
-  function f(x){return raw(x)-center;}
+  function f(x){
+    var u=(x-xShift)/xScale;
+    return rawBase(u)-center;
+  }
 
-  // Concavity: f''(x)=k(2x-p-q).
   var downLeft=k>0;
   var correctLeft=askDown ? downLeft : !downLeft;
   var correct=correctLeft ? intervalTex(-Infinity,h) : intervalTex(h,Infinity);
 
-  // AP-style four-choice structure based on the graph's orientation.
-  // For a cubic with positive leading coefficient:
-  //   left turning point = local max, right turning point = local min.
-  // For a cubic with negative leading coefficient:
-  //   left turning point = local min, right turning point = local max.
   var localMinX = k>0 ? q : p;
   var localMaxX = k>0 ? p : q;
 
@@ -186,6 +195,7 @@ function makeProblem(){
 
   return {
     p:p,q:q,h:h,k:k,f:f,
+    xmin:tx(-8),xmax:tx(4),xStep:xScale,
     askDown:askDown,
     prompt:"The graph of the function \\(f\\) is shown. On which of the following intervals is the graph of \\(f\\) concave "+(askDown?"down":"up")+"?",
     answers:answers
@@ -195,7 +205,8 @@ function makeProblem(){
 function graphSVG(prob){
   var W=560,H=360;
   var padL=54,padR=24,padT=18,padB=42;
-  var xmin=-8,xmax=4;
+  var xmin=prob.xmin,xmax=prob.xmax;
+  var xStep=prob.xStep;
 
   // Determine a y-window from sampled values, but keep axes/ticks readable.
   var ys=[];
@@ -213,10 +224,11 @@ function graphSVG(prob){
   function sy(y){return H-padB-(y-ymin)*(H-padT-padB)/(ymax-ymin)}
 
   var grid="",labels="";
-  for(var gx=Math.ceil(xmin);gx<=Math.floor(xmax);gx++){
+  var firstX=Math.ceil(xmin/xStep)*xStep;
+  for(var gx=firstX;gx<=xmax+1e-9;gx+=xStep){
     var X=sx(gx);
     grid+="<line x1='"+X+"' y1='"+padT+"' x2='"+X+"' y2='"+(H-padB)+"' stroke='#d0d0d0' stroke-width='0.8'/>";
-    if(gx!==0) labels+="<text x='"+X+"' y='"+(sy(0)+18)+"' text-anchor='middle' font-size='12' font-family='Times New Roman'>"+gx+"</text>";
+    if(Math.abs(gx)>1e-9) labels+="<text x='"+X+"' y='"+(sy(0)+18)+"' text-anchor='middle' font-size='12' font-family='Times New Roman'>"+gx+"</text>";
   }
 
   var yStep=5;
