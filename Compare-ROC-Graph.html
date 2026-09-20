@@ -146,6 +146,12 @@ function drawGrid(){
       "text-anchor":"end","font-size":14,"font-family":"Times New Roman"
     });
   }
+  addText(xp(XMAX)-8,yp(0)-8,"x",{
+    "text-anchor":"end","font-size":16,"font-family":"Times New Roman","font-style":"italic"
+  });
+  addText(xp(0)+8,yp(YMAX)+16,"y",{
+    "text-anchor":"start","font-size":16,"font-family":"Times New Roman","font-style":"italic"
+  });
 }
 
 function makeProblem(){
@@ -202,16 +208,10 @@ function drawCurve(p){
   drawGrid();
 
   var path="";
-  var started=false;
-  for(var i=0;i<=240;i++){
-    var x=XMIN+(XMAX-XMIN)*i/240;
+  for(var i=0;i<=320;i++){
+    var x=XMIN+(XMAX-XMIN)*i/320;
     var y=p.fn(x);
-    if(y<YMIN-0.2 || y>YMAX+0.2){
-      started=false;
-      continue;
-    }
-    path+=(started?" L ":" M ")+xp(x)+" "+yp(y);
-    started=true;
+    path+=(i===0?"M ":" L ")+xp(x)+" "+yp(y);
   }
 
   svg.appendChild(svgEl("path",{
