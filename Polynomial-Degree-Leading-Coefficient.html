@@ -11,6 +11,8 @@ body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
 .header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}
 h1{margin:0 0 5px;font-size:29px}
 .subtitle{font-size:16px;color:#555}
+.right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444;text-align:right;line-height:1.15}
 .score{font-size:17px;white-space:nowrap}
 .card{border:1.4px solid #111;padding:24px 26px 26px}
 .prompt{font-size:19px;line-height:1.5;margin-bottom:22px}
@@ -67,7 +69,10 @@ window.MathJax={
       <h1>Polynomial Degree and Leading Coefficient Practice</h1>
       <div class="subtitle">Determine degree and leading coefficient from factored form.</div>
     </div>
-    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+    <div class="right-status">
+      <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+      <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+    </div>
   </div>
 
   <div class="card">
@@ -87,6 +92,16 @@ window.MathJax={
 var answered=false;
 var correctCount=0;
 var attemptCount=0;
+function updateClock(){
+  var now=new Date();
+  document.getElementById("dateDisplay").textContent=(now.getMonth()+1)+"/"+now.getDate();
+  document.getElementById("timeDisplay").textContent=now.toLocaleTimeString(undefined,{
+    hour:"numeric",minute:"2-digit",second:"2-digit"
+  });
+}
+updateClock();
+setInterval(updateClock,1000);
+
 var current=null;
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
