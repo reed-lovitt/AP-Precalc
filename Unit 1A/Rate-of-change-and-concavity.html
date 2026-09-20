@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AP Precalculus — Rate & Concavity Practice</title>
+  <style>
+    :root{
+      --bg:#f7f8fa; --card:#fff; --text:#1f2937; --muted:#6b7280;
+      --border:#d1d5db; --accent:#2563eb; --good:#166534; --goodbg:#f0fdf4;
+      --bad:#991b1b; --badbg:#fef2f2;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:900px;margin:0 auto;padding:18px}
+    header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px}
+    h1{font-size:1.35rem;margin:0}
+    .sub{color:var(--muted);font-size:.95rem;margin-top:3px}
+    .right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444;text-align:right;line-height:1.15}
+.score{display:flex;gap:16px;font-size:.95rem;white-space:nowrap}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+    .prompt{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+    .graphWrap{display:flex;justify-content:center;margin:8px 0 14px}
+    svg{width:100%;max-width:620px;height:auto}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label.choice{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;background:#fff;min-height:64px}
+    label.choice:hover{background:#fafafa}
+    input[type="radio"]{margin-top:3px;transform:scale(1.15)}
+    .feedback{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;display:none}
+    .feedback.good{display:block;background:var(--goodbg);color:var(--good)}
+    .feedback.bad{display:block;background:var(--badbg);color:var(--bad)}
+    .feedback.neutral{display:block;background:#fff;color:var(--text)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    button{min-height:44px;border-radius:9px;border:1px solid var(--border);padding:10px 16px;font-weight:700;font-size:1rem;cursor:pointer;background:#fff}
+    button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .small{font-size:.9rem;color:var(--muted);margin-top:10px}
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      header{align-items:flex-start;flex-direction:column}
+    }
+  
+/* Shared answer-choice polish */
+.choices{gap:12px !important}
+.choice,label.choice{
+  border:1.25px solid #222 !important;
+  border-radius:9px !important;
+  padding:12px 14px !important;
+  min-height:60px;
+  background:#fff !important;
+  align-items:center !important;
+}
+.choice:hover,label.choice:hover{background:#f7f7f7 !important}
+.choice input{margin:0 2px 0 0}
+.choice-letter{min-width:24px;font-weight:700}
+.choice-text,.choice-value,.choice-math{line-height:1.3}
+.choice-math,.choice-text mjx-container,.choice-math mjx-container{font-size:1.08em !important}
+mjx-container{margin:0 !important}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Rate of Change & Concavity Practice</h1>
+      <div class="sub">AP Precalculus — one fresh graph at a time</div>
+    </div>
+    <div class="score">
+      <span><strong id="correct">0</strong> correct</span>
+      <span><strong id="attempted">0</strong> attempted</span>
+    </div>
+  </header>
+
+  <main class="card">
+    <div id="prompt" class="prompt"></div>
+    <div id="graph" class="graphWrap"></div>
+    <div id="choices" class="choices"></div>
+    <div id="feedback" class="feedback" aria-live="polite"></div>
+  </main>
+
+  <div class="actions">
+    <button id="check" class="primary">Check Answer</button>
+    <button id="next" disabled>Next Problem</button>
+    <button id="reset">Reset Score</button>
+  </div>
+  <div class="small">Each problem uses one consistent answer-choice style. The graph and wording family both rotate automatically.</div>
+</div>
+
+<script>
+function updateClock(){
+  var now=new Date();
+  document.getElementById("dateDisplay").textContent=(now.getMonth()+1)+"/"+now.getDate();
+  document.getElementById("timeDisplay").textContent=now.toLocaleTimeString(undefined,{
+    hour:"numeric",minute:"2-digit",second:"2-digit"
+  });
+}
+updateClock();
+setInterval(updateClock,1000);
+
+(() => {
+  const $ = s => document.querySelector(s);
+  const promptEl = $('#prompt'), graphEl = $('#graph'), choicesEl = $('#choices');
+  const feedbackEl = $('#feedback'), checkBtn = $('#check'), nextBtn = $('#next');
+  const correctEl = $('#correct'), attemptedEl = $('#attempted');
+
+  let correct = 0, attempted = 0, locked = false, current = null, lastState = null, lastFamily = null;
+
+  const rand = a => a[Math.floor(Math.random()*a.length)];
+  const shuffle = a => {
+    const b = [...a];
+    for(let i=b.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+  };
+
+  const states = {
+    IU:{key:'IU', inc:true,  up:true,  name:'increasing and concave up'},
+    ID:{key:'ID', inc:true,  up:false, name:'increasing and concave down'},
+    DU:{key:'DU', inc:false, up:true,  name:'decreasing and concave up'},
+    DD:{key:'DD', inc:false, up:false, name:'decreasing and concave down'}
+  };
+
+  function chooseState(){
+    const keys = Object.keys(states).filter(k => k !== lastState);
+    const key = rand(keys);
+    lastState = key;
+    return states[key];
+  }
+
+  function makeCurve(state){
+    const family = rand(['exponential','parabola','radical']);
+    const letter = rand(['f','g','h','m','p','r']);
+    let xmin, xmax, ymin=-5, ymax=5, fn;
+
+    if(family === 'exponential'){
+      xmin=-2.4; xmax=2.4;
+      if(state.key==='IU') fn = x =>  0.62*Math.exp(0.9*x)-1.2;
+      if(state.key==='ID') fn = x => -0.62*Math.exp(-0.9*x)+1.2;
+      if(state.key==='DU') fn = x =>  0.62*Math.exp(-0.9*x)-1.2;
+      if(state.key==='DD') fn = x => -0.62*Math.exp(0.9*x)+1.2;
+    }
+
+    if(family === 'parabola'){
+      if(state.key==='IU'){ xmin=0; xmax=4;  fn = x =>  0.42*x*x-3; }
+      if(state.key==='ID'){ xmin=-4; xmax=0; fn = x => -0.42*x*x+3; }
+      if(state.key==='DU'){ xmin=-4; xmax=0; fn = x =>  0.42*x*x-3; }
+      if(state.key==='DD'){ xmin=0; xmax=4;  fn = x => -0.42*x*x+3; }
+    }
+
+    if(family === 'radical'){
+      if(state.key==='IU'){ xmin=-4.5; xmax=-0.25; fn = x => -2*Math.sqrt(-x)+3.3; }
+      if(state.key==='ID'){ xmin=0.25; xmax=4.5;  fn = x =>  2*Math.sqrt(x)-3.3; }
+      if(state.key==='DU'){ xmin=0.25; xmax=4.5;  fn = x => -2*Math.sqrt(x)+3.3; }
+      if(state.key==='DD'){ xmin=-4.5; xmax=-0.25; fn = x =>  2*Math.sqrt(-x)-3.3; }
+    }
+
+    return {family, letter, xmin, xmax, ymin, ymax, fn};
+  }
+
+  function graphSVG(spec){
+    const W=600, H=300, p=34;
+    const sx = x => p + (x-spec.xmin)*(W-2*p)/(spec.xmax-spec.xmin);
+    const sy = y => H-p-(y-spec.ymin)*(H-2*p)/(spec.ymax-spec.ymin);
+
+    let grid='';
+    for(let i=0;i<=8;i++){
+      const x=p+i*(W-2*p)/8;
+      grid += `<line x1="${x}" y1="${p}" x2="${x}" y2="${H-p}" stroke="#d7dbe0" stroke-width="0.8"/>`;
+    }
+    for(let i=0;i<=8;i++){
+      const y=p+i*(H-2*p)/8;
+      grid += `<line x1="${p}" y1="${y}" x2="${W-p}" y2="${y}" stroke="#d7dbe0" stroke-width="0.8"/>`;
+    }
+
+    const y0=(spec.ymin<=0&&spec.ymax>=0)?sy(0):(H-p);
+    const x0=(spec.xmin<=0&&spec.xmax>=0)?sx(0):p;
+
+    let d='', started=false;
+    for(let i=0;i<=220;i++){
+      const x = spec.xmin+(spec.xmax-spec.xmin)*i/220;
+      const y = spec.fn(x);
+      if(Number.isFinite(y) && y>=spec.ymin-.8 && y<=spec.ymax+.8){
+        d += `${started?'L':'M'}${sx(x).toFixed(1)} ${sy(y).toFixed(1)} `;
+        started = true;
+      }
+    }
+
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of ${spec.letter}">
+      ${grid}
+      <line x1="${p}" y1="${y0}" x2="${W-p}" y2="${y0}" stroke="#20242a" stroke-width="1.6"/>
+      <line x1="${x0}" y1="${p}" x2="${x0}" y2="${H-p}" stroke="#20242a" stroke-width="1.6"/>
+      <text x="${W-p+7}" y="${y0-7}" font-size="15" font-family="Times New Roman" font-style="italic" fill="#20242a">x</text>
+      <text x="${x0+7}" y="${p+5}" font-size="15" font-family="Times New Roman" font-style="italic" fill="#20242a">y</text>
+      <path d="${d}" fill="none" stroke="#20242a" stroke-width="3.4" stroke-linecap="round"/>
+      <text x="${W/2}" y="${H-7}" text-anchor="middle" font-size="14" font-family="Times New Roman" fill="#6b7280">Graph of <tspan font-style="italic">${spec.letter}</tspan></text>
+    </svg>`;
+  }
+
+  const wordingFamilies = [
+    {
+      id: 1,
+      stems: [
+        "Which statement best describes the graph?",
+        "Which statement is true on the interval shown?",
+        "Which description matches the graph?"
+      ],
+      choiceMap: {
+        IU: "Increasing and concave up",
+        ID: "Increasing and concave down",
+        DU: "Decreasing and concave up",
+        DD: "Decreasing and concave down"
+      }
+    },
+    {
+      id: 2,
+      stems: [
+        "Which statement correctly describes the rate of change and concavity?",
+        "Which statement about the rate of change and concavity is true?",
+        "How would you describe the sign of the rate of change and the concavity?"
+      ],
+      choiceMap: {
+        IU: "Positive rate of change and concave up",
+        ID: "Positive rate of change and concave down",
+        DU: "Negative rate of change and concave up",
+        DD: "Negative rate of change and concave down"
+      }
+    },
+    {
+      id: 3,
+      stems: [
+        "As x increases, what happens to the function and to its rate of change?",
+        "Which statement correctly describes the function and whether its rate of change is increasing or decreasing?",
+        "How is the function changing, and what is happening to its rate of change?"
+      ],
+      choiceMap: {
+        IU: "Increasing; rate of change is increasing",
+        ID: "Increasing; rate of change is decreasing",
+        DU: "Decreasing; rate of change is increasing",
+        DD: "Decreasing; rate of change is decreasing"
+      }
+    },
+    {
+      id: 4,
+      stems: [
+        "Which statement correctly describes the rate of change and whether it is increasing or decreasing?",
+        "How is the rate of change behaving on the interval shown?",
+        "Which statement about the rate of change is correct?"
+      ],
+      choiceMap: {
+        IU: "Positive rate of change that is increasing",
+        ID: "Positive rate of change that is decreasing",
+        DU: "Negative rate of change that is increasing",
+        DD: "Negative rate of change that is decreasing"
+      }
+    },
+    {
+      id: 5,
+      stems: [
+        "Which statement best describes how the function is changing?",
+        "How is the function changing on the interval shown?",
+        "Which description best matches the graph?"
+      ],
+      choiceMap: {
+        IU: "Increasing at an increasing rate",
+        ID: "Increasing at a decreasing rate",
+        DU: "Decreasing at a decreasing rate",
+        DD: "Decreasing at an increasing rate"
+      }
+    }
+  ];
+
+  function chooseFamily(){
+    const families = wordingFamilies.filter(f => f.id !== lastFamily);
+    const family = rand(families);
+    lastFamily = family.id;
+    return family;
+  }
+
+  function makeProblem(){
+    const state = chooseState();
+    const spec = makeCurve(state);
+    const family = chooseFamily();
+    const prompt = rand(family.stems);
+    const choices = shuffle(
+      Object.keys(states).map(key => ({key, text: family.choiceMap[key]}))
+    );
+    return {state, spec, family, prompt, choices};
+  }
+
+  function newProblem(){
+    locked = false;
+    checkBtn.disabled = false;
+    nextBtn.disabled = true;
+    feedbackEl.className = 'feedback';
+    feedbackEl.innerHTML = '';
+
+    current = makeProblem();
+    promptEl.textContent = current.prompt;
+    graphEl.innerHTML = graphSVG(current.spec);
+    choicesEl.innerHTML = current.choices.map((choice, i) => `
+      <label class="choice">
+        <input type="radio" name="answer" value="${i}">
+        <span>${choice.text}</span>
+      </label>
+    `).join('');
+  }
+
+  function check(){
+    if(locked) return;
+    const pick = document.querySelector('input[name="answer"]:checked');
+    if(!pick){
+      feedbackEl.className = 'feedback neutral';
+      feedbackEl.innerHTML = '<strong>Choose an answer first.</strong>';
+      return;
+    }
+
+    locked = true;
+    attempted++;
+
+    const chosen = current.choices[Number(pick.value)];
+    const ok = chosen.key === current.state.key;
+    if(ok) correct++;
+
+    correctEl.textContent = correct;
+    attemptedEl.textContent = attempted;
+    checkBtn.disabled = true;
+    nextBtn.disabled = false;
+
+    const s = current.state;
+    const explanation = `
+      The function is <strong>${s.inc ? 'increasing' : 'decreasing'}</strong>, so the rate of change is
+      <strong>${s.inc ? 'positive' : 'negative'}</strong>. The graph is
+      <strong>concave ${s.up ? 'up' : 'down'}</strong>, so the rate of change is
+      <strong>${s.up ? 'increasing' : 'decreasing'}</strong>.
+    `;
+    const correctPhrase = current.family.choiceMap[s.key];
+
+    feedbackEl.className = 'feedback ' + (ok ? 'good' : 'bad');
+    feedbackEl.innerHTML = ok
+      ? `<strong>✓ Correct</strong><div style="margin-top:6px">${explanation}</div>`
+      : `<strong>✗ Not quite</strong><div style="margin-top:6px">${explanation}</div><div style="margin-top:6px">Correct answer: <strong>${correctPhrase}</strong></div>`;
+  }
+
+  $('#check').addEventListener('click', check);
+  $('#next').addEventListener('click', newProblem);
+  $('#reset').addEventListener('click', () => {
+    correct = 0;
+    attempted = 0;
+    correctEl.textContent = '0';
+    attemptedEl.textContent = '0';
+    newProblem();
+  });
+
+  newProblem();
+})();
+</script>
+</body>
+</html>
