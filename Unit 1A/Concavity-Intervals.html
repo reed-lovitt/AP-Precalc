@@ -154,21 +154,33 @@ function makeProblem(){
   var correctLeft=askDown ? downLeft : !downLeft;
   var correct=correctLeft ? intervalTex(-Infinity,h) : intervalTex(h,Infinity);
 
-  // Meaningful distractors: use extrema locations and the opposite side.
-  var candidates=[
-    correct,
-    correctLeft ? intervalTex(h,Infinity) : intervalTex(-Infinity,h),
-    intervalTex(-Infinity,p),
-    intervalTex(q,Infinity),
-    intervalTex(p,q),
-    intervalTex(p,h),
-    intervalTex(h,q),
-    unionTex("-\\infty",String(p),String(q),"\\infty")
+  // AP-style four-choice structure based on the graph's orientation.
+  // For a cubic with positive leading coefficient:
+  //   left turning point = local max, right turning point = local min.
+  // For a cubic with negative leading coefficient:
+  //   left turning point = local min, right turning point = local max.
+  var localMinX = k>0 ? q : p;
+  var localMaxX = k>0 ? p : q;
+
+  var leftExtremaChoice = k>0
+    ? intervalTex(-Infinity,localMaxX)
+    : intervalTex(-Infinity,localMinX);
+
+  var rightExtremaChoice = k>0
+    ? intervalTex(localMinX,Infinity)
+    : intervalTex(localMaxX,Infinity);
+
+  var leftInflectionChoice = intervalTex(-Infinity,h);
+  var rightInflectionChoice = intervalTex(h,Infinity);
+
+  var four=[
+    leftExtremaChoice,
+    leftInflectionChoice,
+    rightInflectionChoice,
+    rightExtremaChoice
   ];
-  var unique=[];
-  candidates.forEach(function(s){if(unique.indexOf(s)===-1) unique.push(s)});
-  var distractors=shuffle(unique.filter(function(s){return s!==correct})).slice(0,3);
-  var answers=shuffle([correct].concat(distractors)).map(function(s){
+
+  var answers=four.map(function(s){
     return {text:s,correct:s===correct};
   });
 
