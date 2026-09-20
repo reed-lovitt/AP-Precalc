@@ -54,6 +54,10 @@ button:hover{background:#ededed}
 mjx-container{margin:0 !important}
 
 </style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']]},chtml:{scale:1}};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
 <div class="page">
@@ -195,8 +199,8 @@ function makeProblem(){
     else answer=slope1>slope2 ? "x1" : "x2";
 
     var choices=shuffle([
-      {text:"At a",correct:answer==="x1"},
-      {text:"At b",correct:answer==="x2"},
+      {text:"At \\(a\\)",correct:answer==="x1"},
+      {text:"At \\(b\\)",correct:answer==="x2"},
       {text:"The rates of change are the same.",correct:answer==="same"}
     ]);
 
@@ -234,10 +238,11 @@ function drawCurve(p){
 function renderChoices(p){
   var radios=document.querySelectorAll('input[name="choice"]');
   p.choices.forEach(function(c,i){
-    document.getElementById("choice"+i).textContent=c.text;
+    document.getElementById("choice"+i).innerHTML=c.text;
     radios[i].checked=false;
     radios[i].dataset.correct=c.correct?"true":"false";
   });
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.querySelector(".choices")]);
 }
 
 function newProblem(){
