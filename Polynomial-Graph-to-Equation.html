@@ -299,7 +299,7 @@ function renderGraph(p){
   function Y(y){return top+(ymax-y)/(ymax-ymin)*(H-top-bottom);}
 
   var parts=[];
-  parts.push("<defs><marker id='arrow' markerWidth='7' markerHeight='7' refX='5.5' refY='3.5' orient='auto'><path d='M0,0 L7,3.5 L0,7 Z' fill='#222'/></marker></defs>");
+  parts.push("<defs><marker id='arrow' markerWidth='7' markerHeight='7' refX='5.5' refY='3.5' orient='auto'><path d='M0,0 L7,3.5 L0,7 Z' fill='#222'/></marker><clipPath id='plotClip'><rect x='"+left+"' y='"+top+"' width='"+(W-left-right)+"' height='"+(H-top-bottom)+"'/></clipPath></defs>");
 
   // axes
   parts.push("<line x1='"+X(xmin)+"' y1='"+Y(0)+"' x2='"+X(xmax)+"' y2='"+Y(0)+"' stroke='#222' stroke-width='1.1' marker-end='url(#arrow)'/>");
@@ -321,20 +321,16 @@ function renderGraph(p){
   parts.push("<text x='"+(X(0)+7)+"' y='"+(Y(ymax)+10)+"' font-family='Times New Roman' font-size='14' font-style='italic'>y</text>");
   parts.push("<text x='"+(X(0)-7)+"' y='"+(Y(0)+16)+"' text-anchor='end' font-family='Times New Roman' font-size='12'>0</text>");
 
-  // curve
+  // curve: draw one continuous path and let SVG clip it to the graphing window.
+  // This prevents a continuous polynomial from appearing broken when it leaves
+  // and later re-enters the visible y-range.
   var d="";
-  var started=false;
-  for(var i=0;i<=500;i++){
-    var x=xmin+(xmax-xmin)*i/500;
+  for(var i=0;i<=700;i++){
+    var x=xmin+(xmax-xmin)*i/700;
     var y=f(x,p);
-    if(y<ymin-1 || y>ymax+1){
-      started=false;
-      continue;
-    }
-    d+=(started?" L ":"M ")+X(x)+" "+Y(y);
-    started=true;
+    d+=(i===0?"M ":" L ")+X(x)+" "+Y(y);
   }
-  parts.push("<path d='"+d+"' fill='none' stroke='#111' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/>");
+  parts.push("<path d='"+d+"' clip-path='url(#plotClip)' fill='none' stroke='#111' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/>");
   svg.innerHTML=parts.join("");
 }
 
