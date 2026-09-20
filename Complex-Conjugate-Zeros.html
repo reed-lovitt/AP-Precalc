@@ -88,8 +88,15 @@ window.MathJax = {
 <script>
 (function(){
 function typesetMath(target){
-  if(window.MathJax && MathJax.typesetPromise){
-    MathJax.typesetPromise(target ? [target] : undefined);
+  function run(){
+    if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise(target ? [target] : undefined);
+    }
+  }
+  if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+    MathJax.startup.promise.then(run);
+  }else{
+    setTimeout(run,100);
   }
 }
 "use strict";
