@@ -57,6 +57,10 @@ button:hover{background:#ededed}
 mjx-container{margin:0 !important}
 
 </style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']]},chtml:{scale:1}};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
 <div class="page">
@@ -84,6 +88,9 @@ mjx-container{margin:0 !important}
 
 <script>
 (function(){
+function typesetMath(target){
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(target?[target]:undefined);
+}
 "use strict";
 
 var currentProblem=null;
@@ -223,13 +230,13 @@ function renderTable(p){
   var html="";
 
   if(p.orientation==="horizontal"){
-    html='<table><tr><th>x</th>';
+    html='<table><tr><th>\\(x\\)</th>';
     p.xs.forEach(function(x){html+='<td>'+x+'</td>';});
-    html+='</tr><tr><th>f(x)</th>';
+    html+='</tr><tr><th>\\(f(x)\\)</th>';
     p.ys.forEach(function(y){html+='<td>'+y+'</td>';});
     html+='</tr></table>';
   }else{
-    html='<table><tr><th>x</th><th>f(x)</th></tr>';
+    html='<table><tr><th>\\(x\\)</th><th>\\(f(x)\\)</th></tr>';
     for(var i=0;i<p.xs.length;i++){
       html+='<tr><td>'+p.xs[i]+'</td><td>'+p.ys[i]+'</td></tr>';
     }
