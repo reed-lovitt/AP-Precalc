@@ -181,6 +181,12 @@ function drawGrid(){
       });
     }
   }
+  addText(xp(XMAX)-8,yp(0)-8,"x",{
+    "text-anchor":"end","font-size":16,"font-family":"Times New Roman","font-style":"italic"
+  });
+  addText(xp(0)+8,yp(YMAX)+16,"y",{
+    "text-anchor":"start","font-size":16,"font-family":"Times New Roman","font-style":"italic"
+  });
 }
 
 function addFilledPoint(x,y){
