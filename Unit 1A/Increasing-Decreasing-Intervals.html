@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Increasing-Decreasing Intervals Practice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+.page{max-width:940px;margin:26px auto 40px;padding:0 20px}
+.header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}
+h1{margin:0 0 5px;font-size:29px}
+.subtitle{font-size:16px;color:#555}
+.right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444}
+.score{font-size:17px}
+.card{border:1.4px solid #111;padding:22px 24px 24px}
+.graph-title{text-align:center;font-family:"Times New Roman",serif;font-size:18px;margin-bottom:3px}
+.graph-wrap{display:flex;justify-content:center;margin:0 auto 18px}
+svg{display:block;width:100%;max-width:580px;height:auto}
+.prompt{font-size:19px;line-height:1.5;margin:4px 0 20px}
+.prompt mjx-container,.choice-text mjx-container{margin:0 !important}
+.choices{display:grid;gap:12px}
+.choice{
+  border:1.25px solid #222;border-radius:9px;min-height:62px;padding:12px 15px 12px 11px;
+  display:grid;grid-template-columns:42px 1fr;align-items:center;background:#fff;cursor:pointer
+}
+.choice:hover{background:#f7f7f7}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.badge{
+  width:24px;height:24px;border:1.2px solid #444;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700
+}
+.choice.selected{box-shadow:inset 0 0 0 1.4px #111}
+.choice.selected .badge{background:#111;color:#fff}
+.choice-text{font-size:19px;line-height:1.35}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px}
+button{font-size:16px;padding:10px 17px;border:1.25px solid #111;background:#fff;cursor:pointer}
+button:hover{background:#f2f2f2}
+#feedback{min-height:24px;font-size:18px;font-weight:700}
+.correct{color:#1f7a31}
+.incorrect{color:#b52222}
+@media(max-width:650px){
+  .page{padding:0 12px;margin-top:14px}
+  .header{align-items:flex-start}
+  .card{padding:16px}
+  h1{font-size:25px}
+  .prompt{font-size:17px}
+  .choice-text{font-size:18px}
+}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']]},chtml:{scale:1}};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1>Increasing-Decreasing Intervals Practice</h1>
+      <div class="subtitle">Identify intervals where a piecewise linear function is increasing, decreasing, constant, or has positive, negative, or zero rate of change.</div>
+    </div>
+    <div class="right-status">
+      <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+      <div class="score">Score: <span id="correctCount">0</span> / 5</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="graph-title">Graph of \(f\)</div>
+    <div id="graph" class="graph-wrap"></div>
+    <div id="promptText" class="prompt"></div>
+    <form id="choices" class="choices"></form>
+    <div class="controls">
+      <button id="actionButton" type="button">Check Answer</button>
+      <div id="feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var answered=false;
+var correctCount=0;
+var lastQuestionType=null;
+var current=null;
+
+function updateClock(){
+  var now=new Date();
+  document.getElementById("dateDisplay").textContent=(now.getMonth()+1)+"/"+now.getDate();
+  document.getElementById("timeDisplay").textContent=now.toLocaleTimeString(undefined,{
+    hour:"numeric",minute:"2-digit",second:"2-digit"
+  });
+}
+updateClock();
+setInterval(updateClock,1000);
+
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function pick(a){return a[randInt(0,a.length-1)]}
+function shuffle(a){
+  a=a.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function typeset(target){
+  function run(){
+    if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise(target?[target]:undefined);
+    }
+  }
+  if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+    MathJax.startup.promise.then(run);
+  }else{
+    setTimeout(run,100);
+  }
+}
+function interval(a,b){
+  return "\\(["+a+", "+b+"]\\)";
+}
+function twoIntervals(a,b,c,d){
+  return "\\(["+a+", "+b+"]\\) and \\(["+c+", "+d+"]\\)";
+}
+
+function chooseQuestionType(){
+  var concepts=["increasing","decreasing","constant"];
+  var concept=pick(concepts.filter(function(t){return t!==lastQuestionType}));
+  lastQuestionType=concept;
+
+  var useRateLanguage=Math.random()<0.5;
+  if(useRateLanguage){
+    return {
+      concept:concept,
+      wording:concept==="increasing" ? "has a positive rate of change" :
+              concept==="decreasing" ? "has a negative rate of change" :
+              "has a rate of change equal to zero"
+    };
+  }
+
+  return {
+    concept:concept,
+    wording:"is "+concept
+  };
+}
+
+function makeProblem(){
+  // Five x-values create exactly four linear segments.
+  // Segment 2 is always constant.
+  var x0=randInt(-7,-5);
+  var x1=x0+pick([2,3]);
+  var x2=x1+pick([2,3,4]);
+  var x3=x2+pick([2,3]);
+  var x4=x3+pick([2,3]);
+
+  // Keep the whole graph in a compact AP-like window.
+  var plateau=randInt(-1,3);
+  var pattern=pick(["ICDI","DCID"]); // I/C/D/I or D/C/I/D
+
+  var y0,y1=plateau,y2=plateau,y3,y4;
+  if(pattern==="ICDI"){
+    // increasing, constant, decreasing, increasing
+    y0=plateau-randInt(3,6);
+    y3=plateau-randInt(3,7);
+    y4=y3+randInt(4,8);
+  }else{
+    // decreasing, constant, increasing, decreasing
+    y0=plateau+randInt(3,6);
+    y3=plateau+randInt(3,7);
+    y4=y3-randInt(4,8);
+  }
+
+  var points=[
+    {x:x0,y:y0},
+    {x:x1,y:y1},
+    {x:x2,y:y2},
+    {x:x3,y:y3},
+    {x:x4,y:y4}
+  ];
+
+  var questionType=chooseQuestionType();
+  var concept=questionType.concept;
+  var correctText, candidates=[];
+
+  if(concept==="constant"){
+    correctText=interval(x1,x2);
+    candidates=[
+      correctText,
+      interval(x0,x1),
+      interval(x2,x3),
+      interval(x3,x4),
+      interval(x0,x2),
+      interval(x1,x3)
+    ];
+  }else if(pattern==="ICDI"){
+    if(concept==="increasing"){
+      correctText=twoIntervals(x0,x1,x3,x4);
+      candidates=[
+        correctText,
+        twoIntervals(x0,x2,x3,x4),   // wrongly includes constant piece
+        interval(x2,x3),              // decreasing piece
+        interval(x0,x1),              // misses second increasing piece
+        interval(x1,x2),              // constant piece
+        interval(x1,x3)
+      ];
+    }else{
+      correctText=interval(x2,x3);
+      candidates=[
+        correctText,
+        twoIntervals(x0,x1,x3,x4),   // all increasing pieces
+        interval(x1,x3),              // wrongly includes constant
+        interval(x3,x4),
+        interval(x0,x2),
+        interval(x1,x2)
+      ];
+    }
+  }else{
+    if(concept==="decreasing"){
+      correctText=twoIntervals(x0,x1,x3,x4);
+      candidates=[
+        correctText,
+        twoIntervals(x0,x2,x3,x4),   // wrongly includes constant piece
+        interval(x2,x3),              // increasing piece
+        interval(x0,x1),              // misses second decreasing piece
+        interval(x1,x2),
+        interval(x1,x3)
+      ];
+    }else{
+      correctText=interval(x2,x3);
+      candidates=[
+        correctText,
+        twoIntervals(x0,x1,x3,x4),   // all decreasing pieces
+        interval(x1,x3),              // wrongly includes constant
+        interval(x3,x4),
+        interval(x0,x2),
+        interval(x1,x2)
+      ];
+    }
+  }
+
+  var unique=[];
+  candidates.forEach(function(s){
+    if(unique.indexOf(s)===-1) unique.push(s);
+  });
+  var distractors=shuffle(unique.filter(function(s){return s!==correctText})).slice(0,3);
+  var answers=shuffle([correctText].concat(distractors)).map(function(s){
+    return {text:s,correct:s===correctText};
+  });
+
+  var prompt="The graph of the function \\(f\\) is shown. Over which of the following intervals "+questionType.wording+"?";
+
+  return {points:points,questionType:questionType,answers:answers,prompt:prompt};
+}
+
+function graphSVG(prob){
+  var W=580,H=380;
+  var padL=54,padR=26,padT=20,padB=44;
+  var xs=prob.points.map(function(p){return p.x});
+  var ys=prob.points.map(function(p){return p.y});
+  var xmin=Math.min(-8,Math.min.apply(null,xs)-1);
+  var xmax=Math.max(8,Math.max.apply(null,xs)+1);
+  var ymin=Math.min(-5,Math.min.apply(null,ys)-2);
+  var ymax=Math.max(5,Math.max.apply(null,ys)+2);
+
+  function sx(x){return padL+(x-xmin)*(W-padL-padR)/(xmax-xmin)}
+  function sy(y){return H-padB-(y-ymin)*(H-padT-padB)/(ymax-ymin)}
+
+  var grid="",labels="";
+  for(var gx=Math.ceil(xmin);gx<=Math.floor(xmax);gx++){
+    var X=sx(gx);
+    grid+="<line x1='"+X+"' y1='"+padT+"' x2='"+X+"' y2='"+(H-padB)+"' stroke='#d0d0d0' stroke-width='0.8'/>";
+    if(gx!==0){
+      labels+="<text x='"+X+"' y='"+(sy(0)+18)+"' text-anchor='middle' font-size='12' font-family='Times New Roman'>"+gx+"</text>";
+    }
+  }
+  for(var gy=Math.ceil(ymin);gy<=Math.floor(ymax);gy++){
+    var Y=sy(gy);
+    grid+="<line x1='"+padL+"' y1='"+Y+"' x2='"+(W-padR)+"' y2='"+Y+"' stroke='#d0d0d0' stroke-width='0.8'/>";
+    if(gy!==0){
+      labels+="<text x='"+(sx(0)-7)+"' y='"+(Y+4)+"' text-anchor='end' font-size='12' font-family='Times New Roman'>"+gy+"</text>";
+    }
+  }
+
+  var axis=
+    "<line x1='"+padL+"' y1='"+sy(0)+"' x2='"+(W-padR)+"' y2='"+sy(0)+"' stroke='#111' stroke-width='1.4'/>"+
+    "<line x1='"+sx(0)+"' y1='"+padT+"' x2='"+sx(0)+"' y2='"+(H-padB)+"' stroke='#111' stroke-width='1.4'/>";
+
+  var d="";
+  prob.points.forEach(function(p,i){
+    d+=(i===0?"M":"L")+sx(p.x).toFixed(2)+" "+sy(p.y).toFixed(2)+" ";
+  });
+
+  var dots="";
+  prob.points.forEach(function(p){
+    dots+="<circle cx='"+sx(p.x)+"' cy='"+sy(p.y)+"' r='4' fill='#111'/>";
+  });
+
+  return "<svg viewBox='0 0 "+W+" "+H+"' role='img' aria-label='Piecewise linear graph of f'>"+
+    grid+axis+labels+
+    "<path d='"+d+"' fill='none' stroke='#111' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/>"+
+    dots+
+    "<text x='"+(W-padR+8)+"' y='"+(sy(0)+4)+"' font-size='15' font-family='Times New Roman' font-style='italic'>x</text>"+
+    "<text x='"+(sx(0)+7)+"' y='"+(padT-3)+"' font-size='15' font-family='Times New Roman' font-style='italic'>y</text>"+
+    "</svg>";
+}
+
+function renderChoices(p){
+  var form=document.getElementById("choices");
+  form.innerHTML="";
+  var letters=["A","B","C","D"];
+  p.answers.forEach(function(a,i){
+    var label=document.createElement("label");
+    label.className="choice";
+    label.innerHTML="<input type='radio' name='choice' value='"+i+"'>"+
+      "<span class='badge'>"+letters[i]+"</span>"+
+      "<span class='choice-text'>"+a.text+"</span>";
+    var input=label.querySelector("input");
+    input.dataset.correct=a.correct?"true":"false";
+    label.addEventListener("click",function(){
+      document.querySelectorAll(".choice").forEach(function(el){el.classList.remove("selected")});
+      label.classList.add("selected");
+      input.checked=true;
+    });
+    form.appendChild(label);
+  });
+}
+
+function newProblem(){
+  answered=false;
+  current=makeProblem();
+  document.getElementById("feedback").textContent="";
+  document.getElementById("feedback").className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  document.getElementById("graph").innerHTML=graphSVG(current);
+  document.getElementById("promptText").innerHTML=current.prompt;
+  renderChoices(current);
+  typeset(document.querySelector(".card"));
+}
+
+function checkAnswer(){
+  if(answered)return;
+  var selected=document.querySelector("input[name='choice']:checked");
+  var feedback=document.getElementById("feedback");
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+  answered=true;
+  if(selected.dataset.correct==="true"){
+    correctCount=Math.min(5,correctCount+1);
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  }else{
+    correctCount=0;
+    feedback.textContent="Not quite. Score reset to 0.";
+    feedback.className="incorrect";
+  }
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",function(){
+  answered?newProblem():checkAnswer();
+});
+
+newProblem();
+})();
+</script>
+</body>
+</html>
