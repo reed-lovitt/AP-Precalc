@@ -77,7 +77,7 @@ window.MathJax = {
   <div class="topbar">
     <div class="right-status">
       <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
-      <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+      <div class="score">Score: <span id="correctCount">0</span> / 5</div>
     </div>
   </div>
 
@@ -367,11 +367,10 @@ function checkAnswer(){
     return;
   }
 
-  attemptCount++;
   answered=true;
 
   if(selected.dataset.correct==="true"){
-    correctCount++;
+    correctCount=Math.min(5,correctCount+1);
     feedback.textContent="Correct!";
     feedback.className="correct";
   } else {
@@ -381,7 +380,6 @@ function checkAnswer(){
   }
 
   document.getElementById("correctCount").textContent=correctCount;
-  document.getElementById("attemptCount").textContent=attemptCount;
   document.getElementById("actionButton").textContent="New Question";
 }
 
