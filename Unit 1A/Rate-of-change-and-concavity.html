@@ -67,9 +67,9 @@ mjx-container{margin:0 !important}
       <h1>Rate of Change & Concavity Practice</h1>
       <div class="sub">AP Precalculus — one fresh graph at a time</div>
     </div>
-    <div class="score">
-      <span><strong id="correct">0</strong> correct</span>
-      <span><strong id="attempted">0</strong> attempted</span>
+    <div class="right-status">
+      <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+      <div class="score">Score: <strong id="correct">0</strong> / 5</div>
     </div>
   </header>
 
@@ -103,9 +103,9 @@ setInterval(updateClock,1000);
   const $ = s => document.querySelector(s);
   const promptEl = $('#prompt'), graphEl = $('#graph'), choicesEl = $('#choices');
   const feedbackEl = $('#feedback'), checkBtn = $('#check'), nextBtn = $('#next');
-  const correctEl = $('#correct'), attemptedEl = $('#attempted');
+  const correctEl = $('#correct');
 
-  let correct = 0, attempted = 0, locked = false, current = null, lastState = null, lastFamily = null;
+  let correct = 0, locked = false, current = null, lastState = null, lastFamily = null;
 
   const rand = a => a[Math.floor(Math.random()*a.length)];
   const shuffle = a => {
@@ -319,14 +319,16 @@ setInterval(updateClock,1000);
     }
 
     locked = true;
-    attempted++;
 
     const chosen = current.choices[Number(pick.value)];
     const ok = chosen.key === current.state.key;
-    if(ok) correct++;
+    if(ok){
+      correct = Math.min(5, correct + 1);
+    }else{
+      correct = 0;
+    }
 
     correctEl.textContent = correct;
-    attemptedEl.textContent = attempted;
     checkBtn.disabled = true;
     nextBtn.disabled = false;
 
@@ -349,9 +351,7 @@ setInterval(updateClock,1000);
   $('#next').addEventListener('click', newProblem);
   $('#reset').addEventListener('click', () => {
     correct = 0;
-    attempted = 0;
     correctEl.textContent = '0';
-    attemptedEl.textContent = '0';
     newProblem();
   });
 
