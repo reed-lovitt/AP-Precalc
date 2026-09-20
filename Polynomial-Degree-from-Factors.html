@@ -65,7 +65,7 @@ window.MathJax={
   <div class="header">
     <div>
       <h1>Polynomial Degree from Factors Practice</h1>
-      <div class="subtitle">Use multiplication or division by a linear factor to determine polynomial degree.</div>
+      <div class="subtitle">Use multiplication or division by polynomial factors to determine degree.</div>
     </div>
     <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
   </div>
@@ -90,6 +90,7 @@ var attemptCount=0;
 var current=null;
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function pick(a){return a[randInt(0,a.length-1)]}
 function shuffle(a){
   a=a.slice();
   for(var i=a.length-1;i>0;i--){
