@@ -101,15 +101,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="top">
     <div>
       <h1>Do Now Challenge</h1>
-      <div class="subtitle">Randomly select practice activities from one or more unit folders.</div>
+      <div class="subtitle">Randomly select practice activities from everything taught so far in the CED.</div>
     </div>
   </div>
 
   <div class="controls">
     <div class="control">
-      <div class="control-label">Activity pool</div>
-      <div id="unitRows"></div>
-      <button id="addUnitButton" class="icon-button" type="button" title="Add another unit">+</button>
+      <label class="control-label" for="cedLimit">Activity pool</label>
+      <select id="cedLimit">
+        <option value="1.2">Up to CED 1.2</option>
+        <option value="1.3">Up to CED 1.3</option>
+        <option value="1.4">Up to CED 1.4</option>
+        <option value="1.5" selected>Up to CED 1.5</option>
+        <option value="1.6">Up to CED 1.6</option>
+      </select>
     </div>
 
     <div class="control">
@@ -134,8 +139,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 var owner="reed-lovitt";
 var repo="AP-Precalc";
 var pagesBase="https://reed-lovitt.github.io/AP-Precalc/";
-var unitRows=document.getElementById("unitRows");
-var addUnitButton=document.getElementById("addUnitButton");
+var cedLimit=document.getElementById("cedLimit");
 var activityCount=document.getElementById("activityCount");
 var generateButton=document.getElementById("generateButton");
 var ruleText=document.getElementById("ruleText");
@@ -185,8 +189,27 @@ var titles={
   "Rate-of-change-and-concavity.html":"Rate of Change and Concavity"
 };
 
+var cedTopic={
+  "Interval-Practice.html":1.1,
+  "ROC-Table.html":1.2,
+  "ROC-Graph.html":1.2,
+  "Compare-ROC-Graph.html":1.2,
+  "ROC-Patterns-Table.html":1.3,
+  "Rate-of-change-and-concavity.html":1.4,
+  "Even-Odd-Graph.html":1.5,
+  "Complex-Conjugate-Zeros.html":1.5,
+  "Minimum-Polynomial-Degree.html":1.5,
+  "Polynomial-Degree-Table.html":1.5,
+  "Polynomial-Degree-from-Factors.html":1.5,
+  "Polynomial-Graph-to-Equation.html":1.5,
+  "Polynomial-Degree-Leading-Coefficient.html":1.6,
+  "Polynomial-Global-Extrema.html":1.6,
+  "Polynomial-End-Behavior.html":1.6,
+  "Polynomial-End-Behavior-Expression.html":1.6
+};
+
 var ced={
-  "Interval-Practice.html":"Foundational notation — used throughout Unit 1",
+  "Interval-Practice.html":"CED 1.1 — Foundational interval notation",
   "ROC-Table.html":"CED 1.2 — Rates of Change",
   "ROC-Graph.html":"CED 1.2 — Rates of Change",
   "Compare-ROC-Graph.html":"CED 1.2 — Rates of Change",
@@ -281,42 +304,7 @@ function titleFromFile(file){
   return titles[file] || file.replace(/\.html$/i,"").replace(/-/g," ");
 }
 
-function makeUnitSelect(value){
-  var row=document.createElement("div");
-  row.className="pool-row";
 
-  var select=document.createElement("select");
-  select.className="unit-select";
-  availableUnits.forEach(function(unit){
-    var option=document.createElement("option");
-    option.value=unit;
-    option.textContent=unit;
-    if(unit===value) option.selected=true;
-    select.appendChild(option);
-  });
-
-  var remove=document.createElement("button");
-  remove.type="button";
-  remove.className="remove-button";
-  remove.textContent="×";
-  remove.title="Remove this unit";
-  remove.addEventListener("click",function(){
-    if(document.querySelectorAll(".unit-select").length===1) return;
-    row.remove();
-  });
-
-  row.appendChild(select);
-  row.appendChild(remove);
-  unitRows.appendChild(row);
-}
-
-function selectedUnits(){
-  var values=[];
-  document.querySelectorAll(".unit-select").forEach(function(select){
-    if(values.indexOf(select.value)===-1) values.push(select.value);
-  });
-  return values;
-}
 
 async function loadUnitFolders(){
   try{
@@ -393,7 +381,7 @@ function renderRound(items){
 }
 
 async function generateRound(){
-  var units=selectedUnits();
+  var maxCed=parseFloat(cedLimit.value);
   var count=parseInt(activityCount.value,10);
   if(!Number.isFinite(count)) count=3;
   count=Math.max(1,Math.min(12,count));
@@ -403,17 +391,20 @@ async function generateRound(){
   status.textContent="Loading activities…";
   grid.innerHTML="";
 
-  var lists=await Promise.all(units.map(async function(unit){
+  var lists=await Promise.all(availableUnits.map(async function(unit){
     var files=await getActivities(unit);
     return files.map(function(file){return {unit:unit,file:file}});
   }));
 
   var pool=[];
   lists.forEach(function(list){pool=pool.concat(list)});
+  pool=pool.filter(function(item){
+    return typeof cedTopic[item.file]==="number" && cedTopic[item.file]<=maxCed;
+  });
 
   if(pool.length===0){
     status.textContent="";
-    grid.innerHTML="<div class='empty'>The selected unit folder"+(units.length>1?"s do":" does")+" not contain any activities yet.</div>";
+    grid.innerHTML="<div class='empty'>There are no mapped activities at or below CED "+maxCed.toFixed(1)+".</div>";
     generateButton.disabled=false;
     return;
   }
@@ -425,17 +416,12 @@ async function generateRound(){
   renderRound(picked);
 
   ruleText.textContent="First person to show 5/5 on all "+count+" "+(count===1?"activity":"activities")+" wins.";
-  status.textContent="Selected "+count+" of "+pool.length+" activities from "+units.join(" + ")+", with a strong preference against recently used activities.";
+  status.textContent="Selected "+count+" of "+pool.length+" activities from CED 1.1 through "+maxCed.toFixed(1)+", with a strong preference against recently used activities.";
   generateButton.disabled=false;
 }
 
-addUnitButton.addEventListener("click",function(){
-  var chosen=selectedUnits();
-  var next=availableUnits.find(function(unit){return chosen.indexOf(unit)===-1}) || availableUnits[0];
-  makeUnitSelect(next);
-});
-
 generateButton.addEventListener("click",generateRound);
+cedLimit.addEventListener("change",generateRound);
 
 activityCount.addEventListener("change",function(){
   var n=parseInt(activityCount.value,10);
@@ -446,7 +432,6 @@ activityCount.addEventListener("change",function(){
 
 (async function init(){
   await loadUnitFolders();
-  makeUnitSelect(availableUnits[0] || "Unit 1A");
   generateRound();
 })();
 })();
