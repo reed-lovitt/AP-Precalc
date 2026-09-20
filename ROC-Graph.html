@@ -11,6 +11,8 @@ body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
 h1{margin:0 0 8px;font-size:30px}
 .subtitle{font-size:17px;color:#444;margin-bottom:18px}
 .topbar{display:flex;justify-content:flex-end;margin-bottom:18px}
+.right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444;text-align:right;line-height:1.15}
 .score{font-size:17px}
 .problem-box{border:1.5px solid #111;padding:22px}
 .question{font-size:20px;font-weight:700;margin-bottom:10px}
@@ -71,7 +73,10 @@ window.MathJax = {
 <div class="page">
   <h1>Rate of Change from a Graph</h1>
   <div class="subtitle">Choose the correct setup from the graph. Do not simplify.</div>
-  <div class="topbar"><div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div></div>
+  <div class="topbar"><div class="right-status">
+    <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+    <div class="score">Score: <span id="correctCount">0</span> / <span id="attemptCount">0</span></div>
+  </div></div>
 
   <div class="problem-box">
     <div class="question" id="promptText">Loading problem...</div>
