@@ -119,8 +119,15 @@ svg{
   color:#fff;
 }
 .choice-text{
-  font-size:21px;
+  font-size:22px;
   line-height:1.3;
+  display:flex;
+  align-items:center;
+  min-height:40px;
+}
+.choice-text mjx-container{
+  margin:0 !important;
+  font-size:1.08em !important;
 }
 .controls{
   display:flex;
@@ -159,7 +166,7 @@ window.MathJax = {
   svg: { fontCache: 'global' }
 };
 </script>
-<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
 <div class="page">
@@ -220,8 +227,8 @@ function factorTeX(root,mult){
 
 function formulaTeX(simpleRoot,doubleRoot,lead,den){
   var num=(lead===-1 ? "-" : "")+factorTeX(simpleRoot,1)+factorTeX(doubleRoot,2);
-  if(den===1) return "\\(P(x)="+num+"\\)";
-  return "\\(P(x)=\\frac{"+num+"}{"+den+"}\\)";
+  if(den===1) return "\\(\\displaystyle P(x)="+num+"\\)";
+  return "\\(\\displaystyle P(x)=\\frac{"+num+"}{"+den+"}\\)";
 }
 
 function makeProblem(){
