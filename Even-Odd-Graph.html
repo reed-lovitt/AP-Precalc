@@ -370,7 +370,8 @@ function newProblem(){
   feedback.className="";
   actionButton.textContent="Check Answer";
 
-  functionType.innerHTML='The function <i>f</i> is an <b>'+currentProblem.type+'</b> function.';
+  functionType.innerHTML='The function \\(f\\) is an <b>'+currentProblem.type+'</b> function.';
+  typesetMath(functionType);
   promptText.innerHTML='Find \\(f('+currentProblem.askX+')\\).';
 
   drawProblem(currentProblem);
