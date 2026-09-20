@@ -11,20 +11,24 @@ body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}
 h1{margin:0 0 5px;font-size:32px}
 .subtitle{font-size:17px;color:#555}
-.controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:20px 0 24px}
+.controls{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:20px 0 24px}
 .control{display:flex;flex-direction:column;gap:6px}
-label{font-size:14px;font-weight:700}
-select,button{
+.control-label{font-size:14px;font-weight:700}
+.pool-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+select,input,button{
   font:inherit;
   border:1.25px solid #111;
   background:#fff;
-  padding:10px 12px;
-  min-height:44px;
+  min-height:44px
 }
-select{min-width:180px}
-button{cursor:pointer;padding-left:18px;padding-right:18px}
+select{min-width:180px;padding:10px 12px}
+input[type="number"]{width:88px;padding:10px 12px}
+button{cursor:pointer;padding:10px 16px}
 button:hover{background:#f2f2f2}
 button:disabled{opacity:.45;cursor:not-allowed}
+.icon-button{width:44px;padding:0;font-size:23px;line-height:1}
+.remove-button{width:38px;min-height:38px;padding:0;font-size:20px}
+.actions{display:flex;gap:9px;align-items:center}
 .rule{
   border:1.4px solid #111;
   padding:13px 16px;
@@ -36,13 +40,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .status{min-height:24px;color:#555;margin:-8px 0 15px;font-size:15px}
 .grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:18px
 }
 .card{
   border:1.4px solid #111;
   border-radius:9px;
-  min-height:390px;
+  min-height:410px;
   padding:20px 18px 18px;
   display:flex;
   flex-direction:column;
@@ -67,6 +71,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
   line-height:1.25;
   overflow-wrap:anywhere
 }
+.ced{
+  margin-top:8px;
+  font-size:14px;
+  line-height:1.3;
+  color:#333
+}
+.small{font-size:13px;color:#777;margin-top:5px}
 .empty{
   grid-column:1/-1;
   border:1.4px solid #111;
@@ -74,10 +85,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
   text-align:center;
   font-size:18px
 }
-.small{font-size:13px;color:#666;margin-top:7px}
-@media(max-width:900px){
-  .grid{grid-template-columns:1fr}
-  .card{min-height:0}
+@media(max-width:700px){
+  .page{padding:0 12px;margin-top:16px}
+  .controls{align-items:stretch}
+  .control{width:100%}
+  .pool-row select{flex:1;min-width:0}
+  .actions{width:100%}
+  .actions button{flex:1}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -87,22 +101,28 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="top">
     <div>
       <h1>Do Now Challenge</h1>
-      <div class="subtitle">Three random practice activities from the selected unit.</div>
+      <div class="subtitle">Randomly select practice activities from one or more unit folders.</div>
     </div>
   </div>
 
   <div class="controls">
     <div class="control">
-      <label for="unitSelect">Unit</label>
-      <select id="unitSelect">
-        <option value="Unit 1A">Unit 1A</option>
-        <option value="Unit 1B">Unit 1B</option>
-      </select>
+      <div class="control-label">Activity pool</div>
+      <div id="unitRows"></div>
+      <button id="addUnitButton" class="icon-button" type="button" title="Add another unit">+</button>
     </div>
-    <button id="generateButton" type="button">Generate Round</button>
+
+    <div class="control">
+      <label class="control-label" for="activityCount">Activities</label>
+      <input id="activityCount" type="number" min="1" max="12" step="1" value="3">
+    </div>
+
+    <div class="actions">
+      <button id="generateButton" type="button">Generate Round</button>
+    </div>
   </div>
 
-  <div class="rule">First person to show 5/5 on all three activities wins.</div>
+  <div class="rule" id="ruleText">First person to show 5/5 on all 3 activities wins.</div>
   <div class="status" id="status"></div>
   <div class="grid" id="grid"></div>
 </div>
@@ -114,10 +134,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 var owner="reed-lovitt";
 var repo="AP-Precalc";
 var pagesBase="https://reed-lovitt.github.io/AP-Precalc/";
-var unitSelect=document.getElementById("unitSelect");
+var unitRows=document.getElementById("unitRows");
+var addUnitButton=document.getElementById("addUnitButton");
+var activityCount=document.getElementById("activityCount");
 var generateButton=document.getElementById("generateButton");
+var ruleText=document.getElementById("ruleText");
 var grid=document.getElementById("grid");
 var status=document.getElementById("status");
+
+var availableUnits=["Unit 1A","Unit 1B"];
 
 var fallback={
   "Unit 1A":[
@@ -141,6 +166,44 @@ var fallback={
   "Unit 1B":[]
 };
 
+var titles={
+  "Compare-ROC-Graph.html":"Compare Rates of Change",
+  "Complex-Conjugate-Zeros.html":"Complex Conjugate Zeros",
+  "Even-Odd-Graph.html":"Even and Odd Functions",
+  "Interval-Practice.html":"Interval Notation",
+  "Minimum-Polynomial-Degree.html":"Minimum Polynomial Degree",
+  "Polynomial-Degree-Leading-Coefficient.html":"Degree and Leading Coefficient",
+  "Polynomial-Degree-Table.html":"Polynomial Degree from a Table",
+  "Polynomial-Degree-from-Factors.html":"Polynomial Degree from Factors",
+  "Polynomial-End-Behavior-Expression.html":"End Behavior from an Expression",
+  "Polynomial-End-Behavior.html":"Polynomial End Behavior",
+  "Polynomial-Global-Extrema.html":"Global Extrema of Polynomials",
+  "Polynomial-Graph-to-Equation.html":"Polynomial Graph to Equation",
+  "ROC-Graph.html":"Average Rate of Change from a Graph",
+  "ROC-Patterns-Table.html":"Rate-of-Change Patterns from a Table",
+  "ROC-Table.html":"Average Rate of Change from a Table",
+  "Rate-of-change-and-concavity.html":"Rate of Change and Concavity"
+};
+
+var ced={
+  "Interval-Practice.html":"Foundational notation — used throughout Unit 1",
+  "ROC-Table.html":"CED 1.2 — Rates of Change",
+  "ROC-Graph.html":"CED 1.2 — Rates of Change",
+  "Compare-ROC-Graph.html":"CED 1.2 — Rates of Change",
+  "ROC-Patterns-Table.html":"CED 1.3 — Rates of Change in Linear and Quadratic Functions",
+  "Rate-of-change-and-concavity.html":"CED 1.4 — Polynomial Functions and Rates of Change",
+  "Even-Odd-Graph.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Complex-Conjugate-Zeros.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Minimum-Polynomial-Degree.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Polynomial-Degree-Table.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Polynomial-Degree-from-Factors.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Polynomial-Graph-to-Equation.html":"CED 1.5 — Polynomial Functions and Complex Zeros",
+  "Polynomial-Degree-Leading-Coefficient.html":"CED 1.6 — Polynomial Functions and End Behavior",
+  "Polynomial-Global-Extrema.html":"CED 1.6 — Polynomial Functions and End Behavior",
+  "Polynomial-End-Behavior.html":"CED 1.6 — Polynomial Functions and End Behavior",
+  "Polynomial-End-Behavior-Expression.html":"CED 1.6 — Polynomial Functions and End Behavior"
+};
+
 function shuffle(a){
   a=a.slice();
   for(var i=a.length-1;i>0;i--){
@@ -150,13 +213,64 @@ function shuffle(a){
   return a;
 }
 
-function titleFromFile(file){
-  var s=file.replace(/\.html$/i,"").replace(/-/g," ");
-  return s.replace(/\bROC\b/g,"Rate of Change");
-}
-
 function pageUrl(unit,file){
   return pagesBase+encodeURIComponent(unit)+"/"+encodeURIComponent(file);
+}
+
+function titleFromFile(file){
+  return titles[file] || file.replace(/\.html$/i,"").replace(/-/g," ");
+}
+
+function makeUnitSelect(value){
+  var row=document.createElement("div");
+  row.className="pool-row";
+
+  var select=document.createElement("select");
+  select.className="unit-select";
+  availableUnits.forEach(function(unit){
+    var option=document.createElement("option");
+    option.value=unit;
+    option.textContent=unit;
+    if(unit===value) option.selected=true;
+    select.appendChild(option);
+  });
+
+  var remove=document.createElement("button");
+  remove.type="button";
+  remove.className="remove-button";
+  remove.textContent="×";
+  remove.title="Remove this unit";
+  remove.addEventListener("click",function(){
+    if(document.querySelectorAll(".unit-select").length===1) return;
+    row.remove();
+  });
+
+  row.appendChild(select);
+  row.appendChild(remove);
+  unitRows.appendChild(row);
+}
+
+function selectedUnits(){
+  var values=[];
+  document.querySelectorAll(".unit-select").forEach(function(select){
+    if(values.indexOf(select.value)===-1) values.push(select.value);
+  });
+  return values;
+}
+
+async function loadUnitFolders(){
+  try{
+    var response=await fetch("https://api.github.com/repos/"+owner+"/"+repo+"/contents?ref=main",{
+      headers:{Accept:"application/vnd.github+json"}
+    });
+    if(!response.ok) throw new Error("GitHub request failed");
+    var items=await response.json();
+    var units=items
+      .filter(function(item){return item.type==="dir" && /^Unit\s/i.test(item.name)})
+      .map(function(item){return item.name})
+      .sort();
+    if(units.length) availableUnits=units;
+  }catch(err){}
 }
 
 async function getActivities(unit){
@@ -177,9 +291,9 @@ async function getActivities(unit){
   }
 }
 
-function renderRound(unit,files){
+function renderRound(items){
   grid.innerHTML="";
-  files.forEach(function(file,i){
+  items.forEach(function(item,i){
     var card=document.createElement("div");
     card.className="card";
 
@@ -192,20 +306,25 @@ function renderRound(unit,files){
 
     var name=document.createElement("div");
     name.className="name";
-    name.textContent=titleFromFile(file);
+    name.textContent=titleFromFile(item.file);
+
+    var cedText=document.createElement("div");
+    cedText.className="ced";
+    cedText.textContent=ced[item.file] || "CED mapping not set";
 
     var small=document.createElement("div");
     small.className="small";
-    small.textContent=unit;
+    small.textContent=item.unit;
 
     card.appendChild(num);
     card.appendChild(qr);
     card.appendChild(name);
+    card.appendChild(cedText);
     card.appendChild(small);
     grid.appendChild(card);
 
     new QRCode(qr,{
-      text:pageUrl(unit,file),
+      text:pageUrl(item.unit,item.file),
       width:250,
       height:250,
       correctLevel:QRCode.CorrectLevel.M
@@ -214,30 +333,62 @@ function renderRound(unit,files){
 }
 
 async function generateRound(){
-  var unit=unitSelect.value;
+  var units=selectedUnits();
+  var count=parseInt(activityCount.value,10);
+  if(!Number.isFinite(count)) count=3;
+  count=Math.max(1,Math.min(12,count));
+  activityCount.value=String(count);
+
   generateButton.disabled=true;
   status.textContent="Loading activities…";
   grid.innerHTML="";
 
-  var files=await getActivities(unit);
+  var lists=await Promise.all(units.map(async function(unit){
+    var files=await getActivities(unit);
+    return files.map(function(file){return {unit:unit,file:file}});
+  }));
 
-  if(files.length<3){
+  var pool=[];
+  lists.forEach(function(list){pool=pool.concat(list)});
+
+  if(pool.length===0){
     status.textContent="";
-    grid.innerHTML="<div class='empty'>"+unit+" does not have at least three activities yet.</div>";
+    grid.innerHTML="<div class='empty'>The selected unit folder"+(units.length>1?"s do":" does")+" not contain any activities yet.</div>";
     generateButton.disabled=false;
     return;
   }
 
-  var picked=shuffle(files).slice(0,3);
-  renderRound(unit,picked);
-  status.textContent="Randomly selected 3 of "+files.length+" activities in "+unit+".";
+  if(count>pool.length) count=pool.length;
+  activityCount.value=String(count);
+
+  var picked=shuffle(pool).slice(0,count);
+  renderRound(picked);
+
+  ruleText.textContent="First person to show 5/5 on all "+count+" "+(count===1?"activity":"activities")+" wins.";
+  status.textContent="Randomly selected "+count+" of "+pool.length+" activities from "+units.join(" + ")+".";
   generateButton.disabled=false;
 }
 
-generateButton.addEventListener("click",generateRound);
-unitSelect.addEventListener("change",generateRound);
+addUnitButton.addEventListener("click",function(){
+  var chosen=selectedUnits();
+  var next=availableUnits.find(function(unit){return chosen.indexOf(unit)===-1}) || availableUnits[0];
+  makeUnitSelect(next);
+});
 
-generateRound();
+generateButton.addEventListener("click",generateRound);
+
+activityCount.addEventListener("change",function(){
+  var n=parseInt(activityCount.value,10);
+  if(!Number.isFinite(n)) n=3;
+  n=Math.max(1,Math.min(12,n));
+  activityCount.value=String(n);
+});
+
+(async function init(){
+  await loadUnitFolders();
+  makeUnitSelect(availableUnits[0] || "Unit 1A");
+  generateRound();
+})();
 })();
 </script>
 </body>
