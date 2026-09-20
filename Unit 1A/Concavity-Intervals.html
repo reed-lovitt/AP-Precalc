@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concavity Intervals Practice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+.page{max-width:940px;margin:26px auto 40px;padding:0 20px}
+.header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}
+h1{margin:0 0 5px;font-size:29px}
+.subtitle{font-size:16px;color:#555}
+.right-status{display:flex;align-items:center;gap:18px;white-space:nowrap}
+.clock{font-size:15px;color:#444}
+.score{font-size:17px;white-space:nowrap}
+.card{border:1.4px solid #111;padding:22px 24px 24px}
+.graph-title{text-align:center;font-family:"Times New Roman",serif;font-size:18px;margin-bottom:4px}
+.graph-wrap{display:flex;justify-content:center;margin:0 auto 18px}
+svg{display:block;width:100%;max-width:560px;height:auto}
+.prompt{font-size:19px;line-height:1.5;margin:4px 0 20px}
+.prompt mjx-container,.choice-text mjx-container{margin:0 !important}
+.choices{display:grid;gap:12px}
+.choice{
+  border:1.25px solid #222;border-radius:9px;min-height:62px;padding:12px 15px 12px 11px;
+  display:grid;grid-template-columns:42px 1fr;align-items:center;background:#fff;cursor:pointer
+}
+.choice:hover{background:#f7f7f7}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.badge{
+  width:24px;height:24px;border:1.2px solid #444;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700
+}
+.choice.selected{box-shadow:inset 0 0 0 1.4px #111}
+.choice.selected .badge{background:#111;color:#fff}
+.choice-text{font-size:19px;line-height:1.35}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px}
+button{font-size:16px;padding:10px 17px;border:1.25px solid #111;background:#fff;cursor:pointer}
+button:hover{background:#f2f2f2}
+#feedback{min-height:24px;font-size:18px;font-weight:700}
+.correct{color:#1f7a31}
+.incorrect{color:#b52222}
+@media(max-width:650px){
+  .page{padding:0 12px;margin-top:14px}
+  .header{align-items:flex-start}
+  .card{padding:16px}
+  h1{font-size:25px}
+  .prompt{font-size:17px}
+  .choice-text{font-size:18px}
+}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']]},chtml:{scale:1}};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1>Concavity Intervals Practice</h1>
+      <div class="subtitle">Identify where a polynomial graph is concave up or concave down.</div>
+    </div>
+    <div class="right-status">
+      <div class="clock"><span id="dateDisplay"></span> <span id="timeDisplay"></span></div>
+      <div class="score">Score: <span id="correctCount">0</span> / 5</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="graph-title">Graph of \(f\)</div>
+    <div id="graph" class="graph-wrap"></div>
+    <div id="promptText" class="prompt"></div>
+    <form id="choices" class="choices"></form>
+    <div class="controls">
+      <button id="actionButton" type="button">Check Answer</button>
+      <div id="feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var answered=false;
+var correctCount=0;
+var current=null;
+
+function updateClock(){
+  var now=new Date();
+  document.getElementById("dateDisplay").textContent=(now.getMonth()+1)+"/"+now.getDate();
+  document.getElementById("timeDisplay").textContent=now.toLocaleTimeString(undefined,{
+    hour:"numeric",minute:"2-digit",second:"2-digit"
+  });
+}
+updateClock();
+setInterval(updateClock,1000);
+
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function pick(a){return a[randInt(0,a.length-1)]}
+function shuffle(a){
+  a=a.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function typeset(target){
+  function run(){
+    if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise(target?[target]:undefined);
+    }
+  }
+  if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+    MathJax.startup.promise.then(run);
+  }else{
+    setTimeout(run,100);
+  }
+}
+function fmt(n){return n<0?String(n):String(n)}
+function intervalTex(left,right){
+  var L=left===-Infinity?"-\\infty":String(left);
+  var R=right===Infinity?"\\infty":String(right);
+  return "\\("+ "("+L+", "+R+")" +"\\)";
+}
+function unionTex(a,b,c,d){
+  return "\\("+ "("+a+", "+b+")\\cup("+c+", "+d+")" +"\\)";
+}
+
+// Generate a cubic from its derivative k(x-p)(x-q).
+// The inflection point is EXACTLY h=(p+q)/2, so the answer is analytic,
+// not estimated from sampled pixels.
+function makeProblem(){
+  var pairs=[[-6,-2],[-5,-1],[-4,0],[-3,1],[-2,2],[-6,0],[-4,2]];
+  var pq=pick(pairs);
+  var p=pq[0], q=pq[1];
+  var h=(p+q)/2;
+  var k=pick([1,-1]);
+  var askDown=Math.random()<0.5;
+
+  function raw(x){
+    return k*(x*x*x/3 - (p+q)*x*x/2 + p*q*x);
+  }
+
+  // Center vertically around the midpoint of the two turning values.
+  var fp=raw(p), fq=raw(q);
+  var center=(fp+fq)/2;
+  function f(x){return raw(x)-center;}
+
+  // Concavity: f''(x)=k(2x-p-q).
+  var downLeft=k>0;
+  var correctLeft=askDown ? downLeft : !downLeft;
+  var correct=correctLeft ? intervalTex(-Infinity,h) : intervalTex(h,Infinity);
+
+  // Meaningful distractors: use extrema locations and the opposite side.
+  var candidates=[
+    correct,
+    correctLeft ? intervalTex(h,Infinity) : intervalTex(-Infinity,h),
+    intervalTex(-Infinity,p),
+    intervalTex(q,Infinity),
+    intervalTex(p,q),
+    intervalTex(p,h),
+    intervalTex(h,q),
+    unionTex("-\\infty",String(p),String(q),"\\infty")
+  ];
+  var unique=[];
+  candidates.forEach(function(s){if(unique.indexOf(s)===-1) unique.push(s)});
+  var distractors=shuffle(unique.filter(function(s){return s!==correct})).slice(0,3);
+  var answers=shuffle([correct].concat(distractors)).map(function(s){
+    return {text:s,correct:s===correct};
+  });
+
+  return {
+    p:p,q:q,h:h,k:k,f:f,
+    askDown:askDown,
+    prompt:"The graph of the function \\(f\\) is shown. On which of the following intervals is the graph of \\(f\\) concave "+(askDown?"down":"up")+"?",
+    answers:answers
+  };
+}
+
+function graphSVG(prob){
+  var W=560,H=360;
+  var padL=54,padR=24,padT=18,padB=42;
+  var xmin=-8,xmax=4;
+
+  // Determine a y-window from sampled values, but keep axes/ticks readable.
+  var ys=[];
+  for(var i=0;i<=300;i++){
+    var x=xmin+(xmax-xmin)*i/300;
+    var y=prob.f(x);
+    if(Number.isFinite(y)) ys.push(y);
+  }
+  var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys);
+  var span=Math.max(12,maxY-minY);
+  var ymid=(minY+maxY)/2;
+  var ymin=ymid-span*0.56, ymax=ymid+span*0.56;
+
+  function sx(x){return padL+(x-xmin)*(W-padL-padR)/(xmax-xmin)}
+  function sy(y){return H-padB-(y-ymin)*(H-padT-padB)/(ymax-ymin)}
+
+  var grid="",labels="";
+  for(var gx=Math.ceil(xmin);gx<=Math.floor(xmax);gx++){
+    var X=sx(gx);
+    grid+="<line x1='"+X+"' y1='"+padT+"' x2='"+X+"' y2='"+(H-padB)+"' stroke='#d0d0d0' stroke-width='0.8'/>";
+    if(gx!==0) labels+="<text x='"+X+"' y='"+(sy(0)+18)+"' text-anchor='middle' font-size='12' font-family='Times New Roman'>"+gx+"</text>";
+  }
+
+  var yStep=5;
+  var firstY=Math.ceil(ymin/yStep)*yStep;
+  for(var gy=firstY;gy<=ymax;gy+=yStep){
+    var Y=sy(gy);
+    grid+="<line x1='"+padL+"' y1='"+Y+"' x2='"+(W-padR)+"' y2='"+Y+"' stroke='#d0d0d0' stroke-width='0.8'/>";
+    if(gy!==0 && Y>padT+8 && Y<H-padB-4){
+      labels+="<text x='"+(sx(0)-7)+"' y='"+(Y+4)+"' text-anchor='end' font-size='12' font-family='Times New Roman'>"+gy+"</text>";
+    }
+  }
+
+  var axis="";
+  if(ymin<0&&ymax>0){
+    axis+="<line x1='"+padL+"' y1='"+sy(0)+"' x2='"+(W-padR)+"' y2='"+sy(0)+"' stroke='#111' stroke-width='1.4'/>";
+  }
+  if(xmin<0&&xmax>0){
+    axis+="<line x1='"+sx(0)+"' y1='"+padT+"' x2='"+sx(0)+"' y2='"+(H-padB)+"' stroke='#111' stroke-width='1.4'/>";
+  }
+
+  var d="",started=false;
+  for(var j=0;j<=700;j++){
+    var xx=xmin+(xmax-xmin)*j/700;
+    var yy=prob.f(xx);
+    var visible=Number.isFinite(yy) && yy>=ymin-span*.06 && yy<=ymax+span*.06;
+    if(visible){
+      d+=(started?"L":"M")+sx(xx).toFixed(2)+" "+sy(yy).toFixed(2)+" ";
+      started=true;
+    }else{
+      started=false;
+    }
+  }
+
+  return "<svg viewBox='0 0 "+W+" "+H+"' role='img' aria-label='Graph of f'>"+
+    "<defs><clipPath id='plotClip'><rect x='"+padL+"' y='"+padT+"' width='"+(W-padL-padR)+"' height='"+(H-padT-padB)+"'/></clipPath></defs>"+
+    grid+axis+labels+
+    "<path d='"+d+"' fill='none' stroke='#111' stroke-width='3.2' stroke-linecap='round' clip-path='url(#plotClip)'/>"+
+    "<text x='"+(W-padR+8)+"' y='"+(sy(0)+4)+"' font-size='15' font-family='Times New Roman' font-style='italic'>x</text>"+
+    "<text x='"+(sx(0)+7)+"' y='"+(padT-3)+"' font-size='15' font-family='Times New Roman' font-style='italic'>y</text>"+
+    "</svg>";
+}
+
+function renderChoices(p){
+  var form=document.getElementById("choices");
+  form.innerHTML="";
+  var letters=["A","B","C","D"];
+  p.answers.forEach(function(a,i){
+    var label=document.createElement("label");
+    label.className="choice";
+    label.innerHTML="<input type='radio' name='choice' value='"+i+"'>"+
+      "<span class='badge'>"+letters[i]+"</span>"+
+      "<span class='choice-text'>"+a.text+"</span>";
+    var input=label.querySelector("input");
+    input.dataset.correct=a.correct?"true":"false";
+    label.addEventListener("click",function(){
+      document.querySelectorAll(".choice").forEach(function(el){el.classList.remove("selected")});
+      label.classList.add("selected");
+      input.checked=true;
+    });
+    form.appendChild(label);
+  });
+}
+
+function newProblem(){
+  answered=false;
+  current=makeProblem();
+  document.getElementById("feedback").textContent="";
+  document.getElementById("feedback").className="";
+  document.getElementById("actionButton").textContent="Check Answer";
+  document.getElementById("graph").innerHTML=graphSVG(current);
+  document.getElementById("promptText").innerHTML=current.prompt;
+  renderChoices(current);
+  typeset(document.querySelector(".card"));
+}
+
+function checkAnswer(){
+  if(answered)return;
+  var selected=document.querySelector("input[name='choice']:checked");
+  var feedback=document.getElementById("feedback");
+  if(!selected){
+    feedback.textContent="Select an answer choice first.";
+    feedback.className="incorrect";
+    return;
+  }
+  answered=true;
+  if(selected.dataset.correct==="true"){
+    correctCount=Math.min(5,correctCount+1);
+    feedback.textContent="Correct!";
+    feedback.className="correct";
+  }else{
+    correctCount=0;
+    feedback.textContent="Not quite. Score reset to 0.";
+    feedback.className="incorrect";
+  }
+  document.getElementById("correctCount").textContent=correctCount;
+  document.getElementById("actionButton").textContent="New Question";
+}
+
+document.getElementById("actionButton").addEventListener("click",function(){
+  answered?newProblem():checkAnswer();
+});
+
+newProblem();
+})();
+</script>
+</body>
+</html>
